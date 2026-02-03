@@ -29,7 +29,7 @@ def show_rank_card(rank, boat, percent, detail=None):
     # 20%以上 → おすすめ（うすピンク）
     # それ未満 → 通常
 
-    if percent >= 30:
+       if percent >= 30:
         base_bg = "linear-gradient(135deg,#fff1b8,#ffd700)"
         base_shadow = "0 0 18px rgba(255,215,0,0.8)"
         badge = "👑 本命"
@@ -43,6 +43,9 @@ def show_rank_card(rank, boat, percent, detail=None):
         base_bg = "linear-gradient(135deg,#ffffff,#f2f2f2)"
         base_shadow = "0 4px 10px rgba(0,0,0,0.1)"
         badge = ""
+
+    bg = base_bg
+    shadow = base_shadow
 
 
     html = f"""
@@ -294,6 +297,7 @@ with tab3:
             file_name="boat_prediction.png",
             mime="image/png"
         )
+
 
 
 
