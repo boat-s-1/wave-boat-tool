@@ -1,63 +1,85 @@
 import streamlit as st
+from streamlit_drawable_canvas import st_canvas
+import numpy as np
+from PIL import Image
+import io
 import datetime
 
+st.set_page_config(page_title="競艇予想ツール", layout="centered")
 
-st.set_page_config(layout="wide")
+boats = [1,2,3,4,5,6]
 
-st.title("🚤 競艇 簡易予想ツール")
-
-boats = [1, 2, 3, 4, 5, 6]
-
-# 評価 → 点数
-mark_score = {
-    "☆": 6,
-    "◎": 5,
-    "〇": 4,
-    "□": 3,
-    "△": 2,
-    "×": 1
+boat_colors = {
+    1:"#ffffff",2:"#000000",3:"#ff0000",
+    4:"#0000ff",5:"#ffff00",6:"#00ff00"
 }
 
+mark_score = {"☆":6,"◎":5,"〇":4,"□":3,"△":2,"×":1}
 
-# -------------------------
-# ランキングカード表示
-# -------------------------
-def show_rank_card(rank, boat, percent, is_double_circle=False):
+# ===============================
+# カード表示（行頭スペースなし）
+# ===============================
+def show_rank_card(rank, boat, percent, detail=None, is_double_circle=False):
 
-    medal = ["🥇", "🥈", "🥉"]
-    icon = medal[rank - 1] if rank <= 3 else f"{rank}位"
+    medal = ["🥇","🥈","🥉"]
+    icon = medal[rank-1] if rank<=3 else f"{rank}位"
 
-    # ◎特別表示
-    if is_double_circle:
-        bg = "linear-gradient(135deg,#fff1f1,#ffd6d6)"
-        border = "2px solid #ff4b4b"
-        badge = "<span style='margin-left:8px;color:#ff4b4b;font-weight:bold;'>◎本命</span>"
+    # 80%以上で派手
+    if percent >= 80:
+        base_bg = "linear-gradient(135deg,#fff1b8,#ffd700)"
+        base_shadow = "0 0 18px rgba(255,215,0,0.8)"
     else:
-        bg = "linear-gradient(135deg,#ffffff,#f2f2f2)"
-        border = "1px solid #ddd"
+        base_bg = "linear-gradient(135deg,#ffffff,#f2f2f2)"
+        base_shadow = "0 4px 10px rgba(0,0,0,0.1)"
+
+    # ◎の艇だけさらに特別枠
+    if is_double_circle:
+        bg = "linear-gradient(135deg,#ffe6f2,#ffd1ea)"
+        shadow = "0 0 18px rgba(255,105,180,0.7)"
+        badge = "💮 本命（◎）"
+        border = "2px solid #ff5fa2"
+    else:
+        bg = base_bg
+        shadow = base_shadow
         badge = ""
+        border = "none"
 
     html = f"""
-    <div style="
-        border-radius:16px;
-        padding:14px 16px;
-        margin-bottom:10px;
-        background:{bg};
-        border:{border};
-        box-shadow:0 4px 10px rgba(0,0,0,0.08);
-    ">
-        <div style="font-size:20px;font-weight:bold;">
-            {icon}　{boat}号艇 {badge}
-        </div>
+<div style="
+border-radius:18px;
+padding:14px 16px;
+margin-bottom:12px;
+background:{bg};
+box-shadow:{shadow};
+border:{border};
+">
 
-        <div style="margin-top:6px;font-size:15px;color:#333;">
-            オススメ度：{percent:.1f} %
-        </div>
-    </div>
-    """
+<div style="font-size:20px;font-weight:bold;">
+{icon}　{boat}号艇
+<span style="font-size:13px;color:#ff2f92;"> {badge}</span>
+</div>
+
+<div style="margin-top:6px;font-size:15px;font-weight:bold;">
+おすすめ度：{percent:.0f}％
+</div>
+"""
+
+    if detail is not None:
+        html += f"""
+<div style="margin-top:6px;font-size:14px;">
+モーター {detail['motor']}｜
+当地 {detail['local']}｜
+ST {detail['start']}｜
+展示 {detail['expo']}
+</div>
+"""
+
+    html += "</div>"
 
     st.markdown(html, unsafe_allow_html=True)
 
+
+st.title("🚤 競艇予想サポートツール")
 
 # ---------------------------
 # 共通ヘッダ
@@ -76,67 +98,40 @@ st.caption(f"{race_date}　{place} {race_no}R")
 
 tab1,tab2,tab3 = st.tabs(["⭐簡易版","📊詳細版","📱SNSドラッグ予想"])
 
-
 # ===============================
 # 簡易版
 # ===============================
+with tab1:
 
-st.subheader("⭐ 簡易評価（☆◎〇□△×）")
+    st.subheader("簡易評価（☆◎〇□△×）")
 
-simple = {}
+    simple = {}
 
-for b in boats:
-    st.markdown(f"### {b}号艇")
-    c1, c2, c3, c4 = st.columns(4)
-    simple[b] = {}
+    for b in boats:
+        st.markdown(f"### {b}号艇")
+        c1, c2, c3, c4 = st.columns(4)
+        simple[b] = {}
 
-    with c1:
-        simple[b]["motor"] = st.selectbox(
-            "モーター", list(mark_score), index=3, key=f"sm{b}"
-        )
-    with c2:
-        simple[b]["local"] = st.selectbox(
-            "当地", list(mark_score), index=3, key=f"sl{b}"
-        )
-    with c3:
-        simple[b]["start"] = st.selectbox(
-            "スタート", list(mark_score), index=3, key=f"ss{b}"
-        )
-    with c4:
-        simple[b]["expo"] = st.selectbox(
-            "展示", list(mark_score), index=3, key=f"se{b}"
-        )
+        with c1:
+            simple[b]["motor"] = st.selectbox("モーター", list(mark_score), index=3, key=f"sm{b}")
+        with c2:
+            simple[b]["local"] = st.selectbox("当地", list(mark_score), index=3, key=f"sl{b}")
+        with c3:
+            simple[b]["start"] = st.selectbox("スタート", list(mark_score), index=3, key=f"ss{b}")
+        with c4:
+            simple[b]["expo"] = st.selectbox("展示", list(mark_score), index=3, key=f"se{b}")
 
-# スコア計算
-simple_scores = {
-    b: sum(mark_score[v] for v in simple[b].values())
-    for b in boats
-}
+    simple_scores = {
+        b: sum(mark_score[v] for v in simple[b].values())
+        for b in boats
+    }
 
-st.subheader("📊 簡易ランキング")
+    st.subheader("簡易ランキング")
+    rank = sorted(simple_scores.items(), key=lambda x: x[1], reverse=True)
 
-rank = sorted(simple_scores.items(), key=lambda x: x[1], reverse=True)
+    # ★ここを追加
+    total_score = sum(simple_scores.values())
 
-total_score = sum(simple_scores.values())
-
-for i, (b, s) in enumerate(rank, 1):
-
-    if total_score == 0:
-        percent = 0
-    else:
-        percent = s / total_score * 100
-
-    # ◎が1つでもあれば特別枠
-    is_double = any(v == "◎" for v in simple[b].values())
-
-    show_rank_card(
-        i,
-        b,
-        percent,
-        is_double_circle=is_double
-    )
-
-    
  
 
 # ===============================
@@ -281,8 +276,3 @@ with tab3:
             file_name="boat_prediction.png",
             mime="image/png"
         )
-
-
-
-
-
