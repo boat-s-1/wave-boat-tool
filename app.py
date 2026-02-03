@@ -1,9 +1,18 @@
 import streamlit as st
+from streamlit_drawable_canvas import st_canvas
+import numpy as np
+from PIL import Image
+import io
 import datetime
 
 st.set_page_config(page_title="競艇予想ツール", layout="centered")
 
 boats = [1,2,3,4,5,6]
+
+boat_colors = {
+    1:"#ffffff",2:"#000000",3:"#ff0000",
+    4:"#0000ff",5:"#ffff00",6:"#00ff00"
+}
 
 mark_score = {"☆":6,"◎":5,"〇":4,"□":3,"△":2,"×":1}
 
@@ -75,7 +84,7 @@ with c3:
     race_no = st.selectbox("レース", list(range(1,13)))
 st.caption(f"{race_date}　{place} {race_no}R")
 
-tab1,tab2 = st.tabs(["⭐簡易版","📊詳細版"])
+tab1,tab2,tab3 = st.tabs(["⭐簡易版","📊詳細版","📱SNSドラッグ予想"])
 
 # ===============================
 # 簡易版
@@ -100,8 +109,7 @@ with tab1:
     st.subheader("簡易ランキング")
     rank = sorted(simple_scores.items(), key=lambda x:x[1], reverse=True)
     total_score = sum(simple_scores.values())
-
-    for i, (b, s) in enumerate(rank, 1):
+    for i, (b, s) in enumerate(rank,1):
         percent = s / total_score * 100 if total_score > 0 else 0
         show_rank_card(i, b, percent)
 
@@ -143,41 +151,34 @@ with tab2:
     st.subheader("詳細ランキング")
     dr = sorted(detail_scores.items(), key=lambda x:x[1], reverse=True)
     total_score = sum(detail_scores.values())
-
-    for i, (b, s) in enumerate(dr, 1):
+    for i, (b, s) in enumerate(dr,1):
         percent = s / total_score * 100 if total_score > 0 else 0
         show_rank_card(i, b, percent, detail=detail[b])
 
-
-
 # ===============================
-# ドラッグ予想
+# SNSドラッグ予想
 # ===============================
 with tab3:
-
     st.subheader("SNS用ドラッグ予想")
 
-    base_mode=st.radio("初期並び",
-        ["簡易版ランキング","詳細版ランキング","自由"],horizontal=True)
-
+    base_mode = st.radio("初期並び", ["簡易版ランキング","詳細版ランキング","自由"], horizontal=True)
     if base_mode=="簡易版ランキング":
-        base=rank
+        base = [(b, s / total_score *100 if total_score>0 else 0) for b,s in rank]
     elif base_mode=="詳細版ランキング":
-        base=dr
+        base = [(b, s / total_score *100 if total_score>0 else 0) for b,s in dr]
     else:
-        base=[(b,0) for b in boats]
+        base = [(b,0) for b in boats]
 
     objects=[]
-
-    for i,(b,_) in enumerate(base):
-        x=160
-        y=60+i*60
-
+    for i,(b,percent) in enumerate(base):
+        x = 160
+        y = 60 + i*60
+        # 丸
         objects.append({
             "type":"circle","left":x,"top":y,"radius":22,
             "fill":boat_colors[b],"stroke":"black","strokeWidth":2
         })
-
+        # 数字
         objects.append({
             "type":"text","left":x-8,"top":y-14,"text":str(b),
             "fontSize":24,"fontWeight":"bold",
@@ -190,6 +191,7 @@ with tab3:
     else:
         init_draw=None
 
+    # ターンマーク画像
     bg=Image.open("mark.png")
 
     canvas=st_canvas(
@@ -202,7 +204,6 @@ with tab3:
     )
 
     st.subheader("ドラッグ後の順位")
-
     result=[]
     if canvas.json_data:
         for o in canvas.json_data["objects"]:
@@ -223,30 +224,12 @@ with tab3:
             st.write(f"{marks[i-1]} {b}号艇" if i<=6 else f"{b}号艇")
 
     if canvas.image_data is not None:
-        img=Image.fromarray(np.uint8(canvas.image_data))
-        buf=io.BytesIO()
-        img.save(buf,format="PNG")
-
+        img = Image.fromarray(np.uint8(canvas.image_data))
+        buf = io.BytesIO()
+        img.save(buf, format="PNG")
         st.download_button(
             "📥 予想画像を保存",
             buf.getvalue(),
             file_name="boat_prediction.png",
             mime="image/png"
         )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
