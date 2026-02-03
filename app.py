@@ -24,26 +24,24 @@ def show_rank_card(rank, boat, percent, detail=None, is_double_circle=False):
     medal = ["🥇","🥈","🥉"]
     icon = medal[rank-1] if rank<=3 else f"{rank}位"
 
-    # ここから
+    # おすすめ／本命判定
     if percent >= 30:
-    bg = "linear-gradient(135deg,#fff1b8,#ffd700)"
-    shadow = "0 0 18px rgba(255,215,0,0.8)"
-    badge = "👑 本命"
-    border = "2px solid #d4af37"
+        bg = "linear-gradient(135deg,#fff1b8,#ffd700)"
+        shadow = "0 0 18px rgba(255,215,0,0.8)"
+        badge = "👑 本命"
+        border = "2px solid #d4af37"
 
-elif percent >= 20:
-    bg = "linear-gradient(135deg,#ffe6f2,#ffd1ea)"
-    shadow = "0 0 14px rgba(255,105,180,0.35)"
-    badge = "🌸 おすすめ"
-    border = "2px solid #ff9ecf"
+    elif percent >= 20:
+        bg = "linear-gradient(135deg,#ffe6f2,#ffd1ea)"
+        shadow = "0 0 14px rgba(255,105,180,0.35)"
+        badge = "🌸 おすすめ"
+        border = "2px solid #ff9ecf"
 
-else:
-    bg = "linear-gradient(135deg,#ffffff,#f2f2f2)"
-    shadow = "0 4px 10px rgba(0,0,0,0.1)"
-    badge = ""
-    border = "none"
-
-
+    else:
+        bg = "linear-gradient(135deg,#ffffff,#f2f2f2)"
+        shadow = "0 4px 10px rgba(0,0,0,0.1)"
+        badge = ""
+        border = "none"
 
     html = f"""
 <div style="
@@ -294,6 +292,7 @@ with tab3:
             file_name="boat_prediction.png",
             mime="image/png"
         )
+
 
 
 
