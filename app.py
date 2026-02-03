@@ -19,28 +19,30 @@ mark_score = {"☆":6,"◎":5,"〇":4,"□":3,"△":2,"×":1}
 # ===============================
 # カード表示（行頭スペースなし）
 # ===============================
-def show_rank_card(rank, boat, percent, detail=None, is_double_circle=False):
+def show_rank_card(rank, boat, percent, detail=None):
 
     medal = ["🥇","🥈","🥉"]
     icon = medal[rank-1] if rank<=3 else f"{rank}位"
 
-    # 30%以上で派手
+    # ===== 見た目ルール =====
     if percent >= 30:
-        base_bg = "linear-gradient(135deg,#fff1b8,#ffd700)"
-        base_shadow = "0 0 18px rgba(255,215,0,0.8)"
-    else:
-        base_bg = "linear-gradient(135deg,#ffffff,#f2f2f2)"
-        base_shadow = "0 4px 10px rgba(0,0,0,0.1)"
+        # 本命（金）
+        bg = "linear-gradient(135deg,#fff1b8,#ffd700)"
+        shadow = "0 0 18px rgba(255,215,0,0.8)"
+        badge = "🔥 本命"
+        border = "2px solid #f5c400"
 
-    # ◎の艇だけさらに特別枠
-    if is_double_circle:
-        bg = "linear-gradient(135deg,#ffe6f2,#ffd1ea)"
-        shadow = "0 0 18px rgba(255,105,180,0.7)"
-        badge = "💮 本命（◎）"
-        border = "2px solid #ff5fa2"
+    elif percent >= 20:
+        # おすすめ（今の枠）
+        bg = "linear-gradient(135deg,#ffffff,#f2f2f2)"
+        shadow = "0 4px 10px rgba(0,0,0,0.1)"
+        badge = "⭐ おすすめ"
+        border = "none"
+
     else:
-        bg = base_bg
-        shadow = base_shadow
+        # 通常
+        bg = "#ffffff"
+        shadow = "0 2px 6px rgba(0,0,0,0.08)"
         badge = ""
         border = "none"
 
@@ -138,14 +140,12 @@ with tab1:
         else:
             percent = s / total_score * 100
 
-        # ★おすすめ度30%以上で本命表示
-        is_double = percent >= 30
+     
 
         show_rank_card(
             i,
             b,
-            percent,
-            is_double_circle=is_double
+            percent
         )
 
 
@@ -295,6 +295,7 @@ with tab3:
             file_name="boat_prediction.png",
             mime="image/png"
         )
+
 
 
 
