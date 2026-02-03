@@ -24,8 +24,8 @@ def show_rank_card(rank, boat, percent, detail=None, is_double_circle=False):
     medal = ["🥇","🥈","🥉"]
     icon = medal[rank-1] if rank<=3 else f"{rank}位"
 
-    # 80%以上で派手
-    if percent >= 80:
+    # 30%以上で派手
+    if percent >= 30:
         base_bg = "linear-gradient(135deg,#fff1b8,#ffd700)"
         base_shadow = "0 0 18px rgba(255,215,0,0.8)"
     else:
@@ -79,7 +79,7 @@ ST {detail['start']}｜
     st.markdown(html, unsafe_allow_html=True)
 
 
-st.title("🚤 競艇予想サポートツール")
+st.title("🚤 予想ツール")
 
 # ---------------------------
 # 共通ヘッダ
@@ -96,14 +96,14 @@ with c3:
 
 st.caption(f"{race_date}　{place} {race_no}R")
 
-tab1,tab2,tab3 = st.tabs(["⭐簡易版","📊詳細版","📱SNSドラッグ予想"])
+tab1,tab2,tab3 = st.tabs(["⭐シンプル","📊詳細","📱ドラッグ予想"])
 
 # ===============================
 # 簡易版
 # ===============================
 with tab1:
 
-    st.subheader("簡易評価（☆◎〇□△×）")
+    st.subheader("シンプル評価（☆◎〇□△×）")
 
     simple = {}
 
@@ -126,7 +126,7 @@ with tab1:
         for b in boats
     }
 
-    st.subheader("簡易ランキング")
+    st.subheader("ランキング")
     rank = sorted(simple_scores.items(), key=lambda x: x[1], reverse=True)
 
     # ★ここを追加
@@ -295,6 +295,7 @@ with tab3:
             file_name="boat_prediction.png",
             mime="image/png"
         )
+
 
 
 
