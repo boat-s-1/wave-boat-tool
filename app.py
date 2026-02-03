@@ -132,6 +132,24 @@ with tab1:
     # ★ここを追加
     total_score = sum(simple_scores.values())
 
+    for i, (b, s) in enumerate(rank, 1):
+
+        # ★ここを変更（max_score → total_score）
+        if total_score == 0:
+            percent = 0
+        else:
+            percent = s / total_score * 100
+
+        # ◎が1つでもあれば特別枠
+        is_double = any(v == "◎" for v in simple[b].values())
+
+        show_rank_card(
+            i,
+            b,
+            percent,
+            is_double_circle=is_double
+        )
+
  
 
 # ===============================
@@ -276,3 +294,4 @@ with tab3:
             file_name="boat_prediction.png",
             mime="image/png"
         )
+
