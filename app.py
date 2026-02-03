@@ -193,25 +193,24 @@ with tab2:
             (1/detail[b]["expo"])*we
         )
 
-    st.subheader("詳細ランキング")
-    dr=sorted(detail_scores.items(),key=lambda x:x[1],reverse=True)
+        st.subheader("詳細ランキング")
+    dr = sorted(detail_scores.items(), key=lambda x: x[1], reverse=True)
 
     max_score = max(detail_scores.values())
 
-for i, (b, s) in enumerate(dr, 1):
+    for i, (b, s) in enumerate(dr, 1):
 
-    percent = s / max_score * 100
-    is_double = any(v == "◎" for v in simple[b].values())
+        percent = s / max_score * 100
+        is_double = any(v == "◎" for v in simple[b].values())
 
+        show_rank_card(
+            i,
+            b,
+            percent,
+            detail=detail[b],
+            is_double_circle=is_double
+        )
 
-
-    show_rank_card(
-        i,
-        b,
-        percent,
-        detail=detail[b],
-        is_double_circle=is_double
-    )
 
 # ===============================
 # ドラッグ予想
@@ -296,6 +295,7 @@ with tab3:
             file_name="boat_prediction.png",
             mime="image/png"
         )
+
 
 
 
