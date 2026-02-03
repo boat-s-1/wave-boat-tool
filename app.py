@@ -139,9 +139,8 @@ with tab1:
             percent = 0
         else:
             percent = s / total_score * 100
-
-        # おすすめ度が30%以上なら本命扱い
-　　　　　　is_double = percent >= 30
+# おすすめ度が30%以上なら本命扱い
+is_double = percent >= 30
 
 
         show_rank_card(
@@ -296,6 +295,7 @@ with tab3:
             file_name="boat_prediction.png",
             mime="image/png"
         )
+
 
 
 
