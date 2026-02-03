@@ -103,7 +103,7 @@ tab1,tab2,tab3 = st.tabs(["⭐シンプル","📊詳細","📱ドラッグ予想
 # ===============================
 with tab1:
 
-    st.subheader("シンプル評価（☆◎〇□△×）")
+    st.subheader("簡易評価（☆◎〇□△×）")
 
     simple = {}
 
@@ -126,27 +126,28 @@ with tab1:
         for b in boats
     }
 
-    st.subheader("ランキング")
+    st.subheader("簡易ランキング")
     rank = sorted(simple_scores.items(), key=lambda x: x[1], reverse=True)
 
-    # ★ここを追加
     total_score = sum(simple_scores.values())
 
-   for i, (b, s) in enumerate(rank, 1):
+    for i, (b, s) in enumerate(rank, 1):
 
-    if total_score == 0:
-        percent = 0
-    else:
-        percent = s / total_score * 100
+        if total_score == 0:
+            percent = 0
+        else:
+            percent = s / total_score * 100
 
-    is_double = percent >= 30
+        # ★おすすめ度30%以上で本命表示
+        is_double = percent >= 30
 
-    show_rank_card(
-        i,
-        b,
-        percent,
-        is_double_circle=is_double
-    )
+        show_rank_card(
+            i,
+            b,
+            percent,
+            is_double_circle=is_double
+        )
+
 
 
 
@@ -294,6 +295,7 @@ with tab3:
             file_name="boat_prediction.png",
             mime="image/png"
         )
+
 
 
 
