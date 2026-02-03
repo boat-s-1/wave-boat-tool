@@ -188,4 +188,3 @@ with tab3:
         result=sorted(result,key=lambda x:x[1])
         for i,(b,_) in enumerate(result,1):
             st.write(f"{i}位　{b}号艇")
-
