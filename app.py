@@ -140,8 +140,9 @@ with tab1:
         else:
             percent = s / total_score * 100
 
-        # ◎が1つでもあれば特別枠
-        is_double = any(v == "◎" for v in simple[b].values())
+        # おすすめ度が30%以上なら本命扱い
+is_double = percent >= 30
+
 
         show_rank_card(
             i,
@@ -295,6 +296,7 @@ with tab3:
             file_name="boat_prediction.png",
             mime="image/png"
         )
+
 
 
 
