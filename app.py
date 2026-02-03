@@ -19,17 +19,13 @@ mark_score = {"☆":6,"◎":5,"〇":4,"□":3,"△":2,"×":1}
 # ===============================
 # カード表示（行頭スペースなし）
 # ===============================
-def show_rank_card(rank, boat, percent, detail=None):
+def show_rank_card(rank, boat, percent, detail=None, is_double_circle=False):
 
     medal = ["🥇","🥈","🥉"]
     icon = medal[rank-1] if rank<=3 else f"{rank}位"
 
-      # ▼ 枠の色ルール
-    # 30%以上 → 本命（金）
-    # 20%以上 → おすすめ（うすピンク）
-    # それ未満 → 通常
-
-       if percent >= 30:
+    # ここから
+    if percent >= 30:
         base_bg = "linear-gradient(135deg,#fff1b8,#ffd700)"
         base_shadow = "0 0 18px rgba(255,215,0,0.8)"
         badge = "👑 本命"
@@ -46,6 +42,7 @@ def show_rank_card(rank, boat, percent, detail=None):
 
     bg = base_bg
     shadow = base_shadow
+
 
 
     html = f"""
@@ -297,6 +294,7 @@ with tab3:
             file_name="boat_prediction.png",
             mime="image/png"
         )
+
 
 
 
