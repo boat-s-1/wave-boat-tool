@@ -132,8 +132,7 @@ with tab1:
     # ★ここを追加
     total_score = sum(simple_scores.values())
 
-   
-
+ 
 
 # ===============================
 # 詳細版
