@@ -24,27 +24,26 @@ def show_rank_card(rank, boat, percent, detail=None):
     medal = ["🥇","🥈","🥉"]
     icon = medal[rank-1] if rank<=3 else f"{rank}位"
 
-    # ===== 見た目ルール =====
+      # ▼ 枠の色ルール
+    # 30%以上 → 本命（金）
+    # 20%以上 → おすすめ（うすピンク）
+    # それ未満 → 通常
+
     if percent >= 30:
-        # 本命（金）
-        bg = "linear-gradient(135deg,#fff1b8,#ffd700)"
-        shadow = "0 0 18px rgba(255,215,0,0.8)"
-        badge = "🔥 本命"
-        border = "2px solid #f5c400"
+        base_bg = "linear-gradient(135deg,#fff1b8,#ffd700)"
+        base_shadow = "0 0 18px rgba(255,215,0,0.8)"
+        badge = "👑 本命"
 
     elif percent >= 20:
-        # おすすめ（今の枠）
-        bg = "linear-gradient(135deg,#ffffff,#f2f2f2)"
-        shadow = "0 4px 10px rgba(0,0,0,0.1)"
-        badge = "⭐ おすすめ"
-        border = "none"
+        base_bg = "linear-gradient(135deg,#ffe6f2,#ffd1ea)"
+        base_shadow = "0 0 14px rgba(255,105,180,0.35)"
+        badge = "🌸 おすすめ"
 
     else:
-        # 通常
-        bg = "#ffffff"
-        shadow = "0 2px 6px rgba(0,0,0,0.08)"
+        base_bg = "linear-gradient(135deg,#ffffff,#f2f2f2)"
+        base_shadow = "0 4px 10px rgba(0,0,0,0.1)"
         badge = ""
-        border = "none"
+
 
     html = f"""
 <div style="
@@ -295,6 +294,7 @@ with tab3:
             file_name="boat_prediction.png",
             mime="image/png"
         )
+
 
 
 
