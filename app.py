@@ -164,7 +164,7 @@ with tab3:
         init_draw=None
 
     # GitHub の raw URL から画像読み込み
-    url = "https://raw.githubusercontent.com/ユーザー名/リポジトリ名/main/mark.png"
+    url = "https://raw.githubusercontent.com/boat-s-1/wave-boat-tool/main/mark.png"
     bg = Image.open(requests.get(url,stream=True).raw)
 
     canvas = st_canvas(
@@ -188,3 +188,4 @@ with tab3:
         result=sorted(result,key=lambda x:x[1])
         for i,(b,_) in enumerate(result,1):
             st.write(f"{i}位　{b}号艇")
+
