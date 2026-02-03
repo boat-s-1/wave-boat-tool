@@ -4,40 +4,39 @@ import numpy as np
 from PIL import Image
 import io
 import datetime
-import requests
 
 st.set_page_config(page_title="競艇予想ツール", layout="centered")
 
 boats = [1,2,3,4,5,6]
 
-boat_colors = {
-    1:"#ffffff",2:"#000000",3:"#ff0000",
-    4:"#0000ff",5:"#ffff00",6:"#00ff00"
-}
+boat_colors = {1:"#ffffff",2:"#000000",3:"#ff0000",
+               4:"#0000ff",5:"#ffff00",6:"#00ff00"}
 
 mark_score = {"☆":6,"◎":5,"〇":4,"□":3,"△":2,"×":1}
 
-# ===============================
+# -----------------------------
 # カード表示
-# ===============================
-def show_rank_card(rank, boat, percent, detail=None):
+# -----------------------------
+def show_rank_card(rank, boat, percent, detail=None, is_double_circle=False):
     medal = ["🥇","🥈","🥉"]
     icon = medal[rank-1] if rank<=3 else f"{rank}位"
 
-    # 30%以上は金色で本命
+    # 枠色：20%以上 → 薄ピンクでおすすめ、30%以上 → 金色で本命
     if percent >= 30:
         bg = "linear-gradient(135deg,#fff1b8,#ffd700)"
         shadow = "0 0 18px rgba(255,215,0,0.8)"
         badge = "💮 本命"
-    # 20%以上は薄ピンクでおすすめ
+        border = "2px solid #ffd700"
     elif percent >= 20:
         bg = "linear-gradient(135deg,#ffe6f2,#ffd1ea)"
-        shadow = "0 0 10px rgba(255,105,180,0.5)"
+        shadow = "0 0 10px rgba(255,105,180,0.4)"
         badge = "✨ おすすめ"
+        border = "2px solid #ff99c8"
     else:
         bg = "linear-gradient(135deg,#ffffff,#f2f2f2)"
         shadow = "0 4px 10px rgba(0,0,0,0.1)"
         badge = ""
+        border = "none"
 
     html = f"""
 <div style="
@@ -46,6 +45,7 @@ padding:14px 16px;
 margin-bottom:12px;
 background:{bg};
 box-shadow:{shadow};
+border:{border};
 ">
 <div style="font-size:20px;font-weight:bold;">
 {icon}　{boat}号艇
@@ -58,26 +58,28 @@ box-shadow:{shadow};
     if detail is not None:
         html += f"""
 <div style="margin-top:6px;font-size:14px;">
-モーター {detail['motor']}｜当地 {detail['local']}｜ST {detail['start']}｜展示 {detail['expo']}
+モーター {detail['motor']}｜
+当地 {detail['local']}｜
+ST {detail['start']}｜
+展示 {detail['expo']}
 </div>
 """
     html += "</div>"
-
     st.markdown(html, unsafe_allow_html=True)
 
-
+# -----------------------------
+# ヘッダ
+# -----------------------------
 st.title("🚤 競艇予想サポートツール")
-
-# ---------------------------
-# レース選択
-# ---------------------------
 c1,c2,c3 = st.columns(3)
 with c1:
     race_date = st.date_input("日付", datetime.date.today())
 with c2:
-    place = st.selectbox("競艇場", ["蒲郡","常滑","浜名湖","津","大村","住之江","若松","芦屋"])
+    place = st.selectbox("競艇場",
+                         ["蒲郡","常滑","浜名湖","津","大村","住之江","若松","芦屋"])
 with c3:
     race_no = st.selectbox("レース", list(range(1,13)))
+
 st.caption(f"{race_date}　{place} {race_no}R")
 
 tab1,tab2,tab3 = st.tabs(["⭐簡易版","📊詳細版","📱SNSドラッグ予想"])
@@ -93,22 +95,21 @@ with tab1:
         c1,c2,c3,c4 = st.columns(4)
         simple[b] = {}
         with c1:
-            simple[b]["motor"] = st.selectbox("モーター", list(mark_score), index=3,key=f"sm{b}")
+            simple[b]["motor"] = st.selectbox("モーター", list(mark_score), index=3, key=f"sm{b}")
         with c2:
-            simple[b]["local"] = st.selectbox("当地", list(mark_score), index=3,key=f"sl{b}")
+            simple[b]["local"] = st.selectbox("当地", list(mark_score), index=3, key=f"sl{b}")
         with c3:
-            simple[b]["start"] = st.selectbox("スタート", list(mark_score), index=3,key=f"ss{b}")
+            simple[b]["start"] = st.selectbox("スタート", list(mark_score), index=3, key=f"ss{b}")
         with c4:
-            simple[b]["expo"] = st.selectbox("展示", list(mark_score), index=3,key=f"se{b}")
+            simple[b]["expo"] = st.selectbox("展示", list(mark_score), index=3, key=f"se{b}")
 
     simple_scores = {b:sum(mark_score[v] for v in simple[b].values()) for b in boats}
-    total_score = sum(simple_scores.values())
-    rank = sorted(simple_scores.items(), key=lambda x:x[1], reverse=True)
-
     st.subheader("簡易ランキング")
+    rank = sorted(simple_scores.items(), key=lambda x:x[1], reverse=True)
+    total_score = sum(simple_scores.values())
     for i,(b,s) in enumerate(rank,1):
         percent = s/total_score*100 if total_score>0 else 0
-        show_rank_card(i,b,percent)
+        show_rank_card(i,b,percent,is_double_circle=False)
 
 # ===============================
 # 詳細版
@@ -126,23 +127,30 @@ with tab2:
         detail[b]={"motor":motor,"local":local,"start":start,"expo":expo}
 
     st.markdown("### 重み設定")
-    w1,w2,w3,w4 = st.columns(4)
+    w1,w2,w3,w4=st.columns(4)
     with w1: wm=st.slider("モーター重視",0,5,2)
     with w2: wl=st.slider("当地重視",0,5,2)
     with w3: ws=st.slider("ST重視",0,5,2)
     with w4: we=st.slider("展示重視",0,5,2)
 
-    detail_scores={b:detail[b]["motor"]*wm+detail[b]["local"]*wl+(1/detail[b]["start"])*ws+(1/detail[b]["expo"])*we for b in boats}
-    dr=sorted(detail_scores.items(),key=lambda x:x[1],reverse=True)
-    max_score=max(detail_scores.values())
+    detail_scores={}
+    for b in boats:
+        detail_scores[b] = (
+            detail[b]["motor"]*wm +
+            detail[b]["local"]*wl +
+            (1/detail[b]["start"])*ws +
+            (1/detail[b]["expo"])*we
+        )
 
     st.subheader("詳細ランキング")
+    dr=sorted(detail_scores.items(), key=lambda x:x[1], reverse=True)
+    max_score = max(detail_scores.values())
     for i,(b,s) in enumerate(dr,1):
-        percent = s/max_score*100
-        show_rank_card(i,b,percent,detail=detail[b])
+        percent = s/max_score*100 if max_score>0 else 0
+        show_rank_card(i,b,percent,detail=detail[b],is_double_circle=False)
 
 # ===============================
-# SNSドラッグ予想
+# ドラッグ予想
 # ===============================
 with tab3:
     st.subheader("SNS用ドラッグ予想")
@@ -153,7 +161,8 @@ with tab3:
 
     objects=[]
     for i,(b,_) in enumerate(base):
-        x=160;y=60+i*60
+        x=160
+        y=60+i*60
         objects.append({"type":"circle","left":x,"top":y,"radius":22,"fill":boat_colors[b],"stroke":"black","strokeWidth":2})
         objects.append({"type":"text","left":x-8,"top":y-14,"text":str(b),"fontSize":24,"fontWeight":"bold","stroke":"white","strokeWidth":1.5,"fill":"black"})
 
@@ -163,15 +172,14 @@ with tab3:
     else:
         init_draw=None
 
-    # GitHub の raw URL から画像読み込み
-    url = "https://raw.githubusercontent.com/ユーザー名/リポジトリ名/main/mark.png"
-    bg = Image.open(requests.get(url,stream=True).raw)
+    bg=Image.open("mark.png")
 
-    canvas = st_canvas(
+    canvas=st_canvas(
         drawing_mode="transform",
         background_image=bg,
         initial_drawing=init_draw,
-        height=500,width=360,
+        height=500,
+        width=360,
         update_streamlit=True,
         key="canvas"
     )
@@ -183,8 +191,18 @@ with tab3:
             if o["type"]=="text":
                 try: result.append((int(o["text"]),o["top"]))
                 except: pass
-
     if result:
         result=sorted(result,key=lambda x:x[1])
         for i,(b,_) in enumerate(result,1):
             st.write(f"{i}位　{b}号艇")
+        st.markdown("### 🧾 あなたの最終予想")
+        marks=["◎","〇","▲","△","×","注"]
+        for i,(b,_) in enumerate(result,1):
+            st.write(f"{marks[i-1]} {b}号艇" if i<=6 else f"{b}号艇")
+
+    if canvas.image_data is not None:
+        img=Image.fromarray(np.uint8(canvas.image_data))
+        buf=io.BytesIO()
+        img.save(buf,format="PNG")
+        st.download_button("📥 予想画像を保存",buf.getvalue(),file_name="boat_prediction.png",mime="image/png")
+
