@@ -98,6 +98,7 @@ st.caption(f"{race_date}　{place} {race_no}R")
 
 tab1,tab2,tab3 = st.tabs(["⭐簡易版","📊詳細版","📱SNSドラッグ予想"])
 
+
 # ===============================
 # 簡易版
 # ===============================
@@ -277,5 +278,6 @@ with tab3:
             file_name="boat_prediction.png",
             mime="image/png"
         )
+
 
 
