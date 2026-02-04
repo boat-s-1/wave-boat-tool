@@ -181,31 +181,30 @@ with tab3:
 
     objects = []
 
-    for i, (b, _) in enumerate(base):
-        x = 60
-        y = 60 + i * 60
+for i, b in enumerate(boats):
 
-        objects.append({
-            "type": "circle",
-            "left": x,
-            "top": y,
-            "radius": 22,
-            "fill": boat_colors[b],
-            "stroke": "black",
-            "strokeWidth": 2
-        })
+    base_x = 60
 
-        objects.append({
-            "type": "text",
-            "left": x - 8,
-            "top": y - 14,
-            "text": str(b),
-            "fontSize": 24,
-            "fontWeight": "bold",
-            "stroke": "white",
-            "strokeWidth": 1.5,
-            "fill": "black"
-        })
+    if simple_percent.get(b, 0) >= 17:
+        x = base_x + 40
+    else:
+        x = base_x
+
+    y = 80 + i * 60
+
+    objects.append({
+        "type":"circle",
+        "left":x,"top":y,"radius":22,
+        "fill":boat_colors[b],"stroke":"black","strokeWidth":2
+    })
+
+    objects.append({
+        "type":"text",
+        "left":x-8,"top":y-14,"text":str(b),
+        "fontSize":24,"fontWeight":"bold",
+        "stroke":"white","strokeWidth":1.5,"fill":"black"
+    })
+
     objects.append({
     "type": "triangle",
     "left": 170,
@@ -232,6 +231,7 @@ canvas = st_canvas(
     update_streamlit=True,
     key="canvas_drag"
 )
+
 
 
 
