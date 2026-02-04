@@ -90,13 +90,15 @@ tab1,tab2,tab3 = st.tabs(["⭐簡易版","📊詳細版","📱SNSドラッグ予
 # 簡易版
 # ===============================
 with tab1:
+
     st.subheader("簡易評価（☆◎〇□△×）")
     simple = {}
 
     for b in boats:
         st.markdown(f"### {b}号艇")
-        c1,c2,c3,c4 = st.columns(4)
+        c1, c2, c3, c4 = st.columns(4)
         simple[b] = {}
+
         with c1:
             simple[b]["motor"] = st.selectbox("モーター", list(mark_score), index=3, key=f"sm{b}")
         with c2:
@@ -106,22 +108,29 @@ with tab1:
         with c4:
             simple[b]["expo"] = st.selectbox("展示", list(mark_score), index=3, key=f"se{b}")
 
-    simple_scores = {b: sum(mark_score[v] for v in simple[b].values()) for b in boats}
-    simple_percent = {}
-
-for b, s in simple_scores.items():
-    if total_score == 0:
-        simple_percent[b] = 0
-    else:
-        simple_percent[b] = s / total_score * 100
+    # スコア計算
+    simple_scores = {
+        b: sum(mark_score[v] for v in simple[b].values())
+        for b in boats
+    }
 
     total_score = sum(simple_scores.values())
-    rank = sorted(simple_scores.items(), key=lambda x:x[1], reverse=True)
+
+    # ★← これがドラッグ用に使う％
+    simple_percent = {}
+    for b, s in simple_scores.items():
+        if total_score == 0:
+            simple_percent[b] = 0
+        else:
+            simple_percent[b] = s / total_score * 100
+
+    rank = sorted(simple_scores.items(), key=lambda x: x[1], reverse=True)
 
     st.subheader("簡易ランキング")
-    for i,(b,s) in enumerate(rank,1):
-        percent = 0 if total_score==0 else s/total_score*100
-        show_rank_card(i,b,percent)
+
+    for i, (b, s) in enumerate(rank, 1):
+        percent = simple_percent[b]
+        show_rank_card(i, b, percent)
 
 # ===============================
 # 詳細版
@@ -242,6 +251,7 @@ with tab3:
         update_streamlit=True,
         key="canvas_drag"
     )
+
 
 
 
