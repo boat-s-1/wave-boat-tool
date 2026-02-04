@@ -73,7 +73,7 @@ ST {detail['start']}｜
 # ---------------------------
 # ヘッダ
 # ---------------------------
-st.title("🚤 ボートレースツール")
+st.title("🚤 予想ツール")
 c1,c2,c3 = st.columns(3)
 
 with c1:
@@ -276,6 +276,7 @@ with tab3:
         update_streamlit=True,
         key="canvas_drag"
     )
+
 
 
 
