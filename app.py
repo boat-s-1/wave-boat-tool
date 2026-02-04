@@ -160,88 +160,72 @@ with tab2:
         show_rank_card(i,b,percent,detail[b])
 
 # ===============================
-# SNSドラッグ予想（水色背景＋丸色＋ターンマークピンク）
+# ドラッグ予想
 # ===============================
 with tab3:
-    st.subheader("SNS用ドラッグ予想（水色＋丸＋ターンマーク）")
-    base_mode = st.radio("初期並び", ["簡易版ランキング","詳細版ランキング","自由"], horizontal=True)
 
-    if base_mode=="簡易版ランキング":
-        base=rank
-    elif base_mode=="詳細版ランキング":
-        base=rank_detail
+    st.subheader("SNS用ドラッグ予想")
+
+    base_mode = st.radio(
+        "初期並び",
+        ["簡易版ランキング","詳細版ランキング","自由"],
+        horizontal=True
+    )
+
+    if base_mode == "簡易版ランキング":
+        base = rank
+    elif base_mode == "詳細版ランキング":
+        base = dr
     else:
-        base=[(b,0) for b in boats]
+        base = [(b, 0) for b in boats]
 
-    objects=[]
-    for i,(b,_) in enumerate(base):
-        x=160
-        y=60+i*60
-        # 各艇の丸
+    objects = []
+
+    for i, (b, _) in enumerate(base):
+        x = 160
+        y = 60 + i * 60
+
         objects.append({
-            "type":"circle",
-            "left":x,
-            "top":y,
-            "radius":22,
-            "fill":boat_colors[b],
-            "stroke":"black",
-            "strokeWidth":2
+            "type": "circle",
+            "left": x,
+            "top": y,
+            "radius": 22,
+            "fill": boat_colors[b],
+            "stroke": "black",
+            "strokeWidth": 2
         })
-        # 丸の上に番号
+
         objects.append({
-            "type":"text",
-            "left":x-8,
-            "top":y-14,
-            "text":str(b),
-            "fontSize":24,
-            "fontWeight":"bold",
-            "stroke":"white",
-            "strokeWidth":1.5,
-            "fill":"black"
-        })
-        # ターンマーク（ピンク小丸）
-        objects.append({
-            "type":"circle",
-            "left":x+40,
-            "top":y,
-            "radius":10,
-            "fill":"#ff99cc",  # ピンク
-            "stroke":"#ff66aa",
-            "strokeWidth":1
+            "type": "text",
+            "left": x - 8,
+            "top": y - 14,
+            "text": str(b),
+            "fontSize": 24,
+            "fontWeight": "bold",
+            "stroke": "white",
+            "strokeWidth": 1.5,
+            "fill": "black"
         })
 
     if "init" not in st.session_state:
-        st.session_state.init=True
-        init_draw={"version":"4.4.0","objects":objects}
+        st.session_state.init = True
+        init_draw = {"version": "4.4.0", "objects": objects}
     else:
-        init_draw=None
-
-  canvas = st_canvas(
-    drawing_mode="transform",
-    background_color="#a0e0ff",
-    initial_drawing=init_draw,
-    height=500,
-    width=360,
-    update_streamlit=True,
-    key="canvas_drag"
-)
+        init_draw = None
 
 
-    # ドラッグ後の順位
-    st.subheader("ドラッグ後の順位")
-    result=[]
-    if canvas.json_data:
-        for o in canvas.json_data["objects"]:
-            if o["type"]=="text":
-                try:
-                    result.append((int(o["text"]),o["top"]))
-                except:
-                    pass
+    # ★ここ重要：canvas も with tab3 の中に入れる
+    canvas = st_canvas(
+        drawing_mode="transform",
+        background_color="#a0e0ff",
+        initial_drawing=init_draw,
+        height=500,
+        width=360,
+        update_streamlit=True,
+        key="canvas_drag"
+    )
 
-    if result:
-        result=sorted(result,key=lambda x:x[1])
-        for i,(b,_) in enumerate(result,1):
-            st.write(f"{i}位　{b}号艇")
+
 
 
 
