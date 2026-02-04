@@ -207,23 +207,21 @@ with tab3:
             "fill": "black"
         })
 
-    if "init" not in st.session_state:
-        st.session_state.init = True
-        init_draw = {"version": "4.4.0", "objects": objects}
-    else:
-        init_draw = None
+  init_draw = {
+    "version": "4.4.0",
+    "objects": objects
+}
 
+canvas = st_canvas(
+    drawing_mode="transform",
+    background_color="#a0e0ff",
+    initial_drawing=init_draw,
+    height=500,
+    width=360,
+    update_streamlit=True,
+    key="canvas_drag"
+)
 
-    # ★ここ重要：canvas も with tab3 の中に入れる
-    canvas = st_canvas(
-        drawing_mode="transform",
-        background_color="#a0e0ff",
-        initial_drawing=init_draw,
-        height=500,
-        width=360,
-        update_streamlit=True,
-        key="canvas_drag"
-    )
 
 
 
