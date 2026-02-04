@@ -172,65 +172,69 @@ with tab3:
         horizontal=True
     )
 
-    if base_mode == "簡易版ランキング":
-        base = rank
-    elif base_mode == "詳細版ランキング":
-        base = dr
-    else:
-        base = [(b, 0) for b in boats]
-
     objects = []
 
-for i, b in enumerate(boats):
+    # ① 艇は 1→6 固定で縦に並べる
+    for i, b in enumerate(boats):
 
-    base_x = 60
+        base_x = 60
 
-    if simple_percent.get(b, 0) >= 17:
-        x = base_x + 40
-    else:
-        x = base_x
+        if simple_percent.get(b, 0) >= 17:
+            x = base_x + 40
+        else:
+            x = base_x
 
-    y = 80 + i * 60
+        y = 80 + i * 60
 
+        objects.append({
+            "type": "circle",
+            "left": x,
+            "top": y,
+            "radius": 22,
+            "fill": boat_colors[b],
+            "stroke": "black",
+            "strokeWidth": 2
+        })
+
+        objects.append({
+            "type": "text",
+            "left": x - 8,
+            "top": y - 14,
+            "text": str(b),
+            "fontSize": 24,
+            "fontWeight": "bold",
+            "stroke": "white",
+            "strokeWidth": 1.5,
+            "fill": "black"
+        })
+
+    # ② ターンマーク（ピンクの△）は1個だけ追加
     objects.append({
-        "type":"circle",
-        "left":x,"top":y,"radius":22,
-        "fill":boat_colors[b],"stroke":"black","strokeWidth":2
+        "type": "triangle",
+        "left": 170,
+        "top": 60,          # ← 少し下げて〇より少し上くらい
+        "width": 40,
+        "height": 40,
+        "fill": "#ff7abf",
+        "stroke": "#ff3fa4",
+        "strokeWidth": 2
     })
 
-    objects.append({
-        "type":"text",
-        "left":x-8,"top":y-14,"text":str(b),
-        "fontSize":24,"fontWeight":"bold",
-        "stroke":"white","strokeWidth":1.5,"fill":"black"
-    })
+    init_draw = {
+        "version": "4.4.0",
+        "objects": objects
+    }
 
-    objects.append({
-    "type": "triangle",
-    "left": 170,
-    "top": 20,
-    "width": 40,
-    "height": 40,
-    "fill": "#ff7abf",
-    "stroke": "#ff3fa4",
-    "strokeWidth": 2
-})
+    canvas = st_canvas(
+        drawing_mode="transform",
+        background_color="#a0e0ff",
+        initial_drawing=init_draw,
+        height=500,
+        width=360,
+        update_streamlit=True,
+        key="canvas_drag"
+    )
 
-
-init_draw = {
-    "version": "4.4.0",
-    "objects": objects
-}
-
-canvas = st_canvas(
-    drawing_mode="transform",
-    background_color="#a0e0ff",
-    initial_drawing=init_draw,
-    height=500,
-    width=360,
-    update_streamlit=True,
-    key="canvas_drag"
-)
 
 
 
