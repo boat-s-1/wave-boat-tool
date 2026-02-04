@@ -182,7 +182,7 @@ with tab3:
     objects = []
 
     for i, (b, _) in enumerate(base):
-        x = 160
+        x = 60
         y = 60 + i * 60
 
         objects.append({
@@ -206,6 +206,17 @@ with tab3:
             "strokeWidth": 1.5,
             "fill": "black"
         })
+    objects.append({
+    "type": "triangle",
+    "left": 170,
+    "top": 160,
+    "width": 40,
+    "height": 40,
+    "fill": "#ff7abf",
+    "stroke": "#ff3fa4",
+    "strokeWidth": 2
+})
+
 
 init_draw = {
     "version": "4.4.0",
@@ -221,6 +232,7 @@ canvas = st_canvas(
     update_streamlit=True,
     key="canvas_drag"
 )
+
 
 
 
