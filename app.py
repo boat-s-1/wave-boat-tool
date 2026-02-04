@@ -216,15 +216,16 @@ with tab3:
     else:
         init_draw=None
 
-    canvas=st_canvas(
-        drawing_mode="transform",
-        background_color="#a0e0ff",  # 水色背景
-        initial_drawing=init_draw,
-        height=500,
-        width=360,
-        update_streamlit=True,
-        key="canvas"
-    )
+  canvas = st_canvas(
+    drawing_mode="transform",
+    background_color="#a0e0ff",
+    initial_drawing=init_draw,
+    height=500,
+    width=360,
+    update_streamlit=True,
+    key="canvas_drag"
+)
+
 
     # ドラッグ後の順位
     st.subheader("ドラッグ後の順位")
@@ -241,5 +242,6 @@ with tab3:
         result=sorted(result,key=lambda x:x[1])
         for i,(b,_) in enumerate(result,1):
             st.write(f"{i}位　{b}号艇")
+
 
 
