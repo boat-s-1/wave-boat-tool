@@ -107,6 +107,14 @@ with tab1:
             simple[b]["expo"] = st.selectbox("展示", list(mark_score), index=3, key=f"se{b}")
 
     simple_scores = {b: sum(mark_score[v] for v in simple[b].values()) for b in boats}
+    simple_percent = {}
+
+for b, s in simple_scores.items():
+    if total_score == 0:
+        simple_percent[b] = 0
+    else:
+        simple_percent[b] = s / total_score * 100
+
     total_score = sum(simple_scores.values())
     rank = sorted(simple_scores.items(), key=lambda x:x[1], reverse=True)
 
@@ -234,6 +242,7 @@ with tab3:
         update_streamlit=True,
         key="canvas_drag"
     )
+
 
 
 
