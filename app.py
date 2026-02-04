@@ -73,7 +73,7 @@ ST {detail['start']}｜
 # ---------------------------
 # ヘッダ
 # ---------------------------
-st.title("🚤 競艇予想サポートツール")
+st.title("🚤 ボートレースツール")
 c1,c2,c3 = st.columns(3)
 
 with c1:
@@ -84,14 +84,14 @@ with c3:
     race_no = st.selectbox("レース", list(range(1,13)))
 
 st.caption(f"{race_date}　{place} {race_no}R")
-tab1,tab2,tab3 = st.tabs(["⭐簡易版","📊詳細版","📱SNSドラッグ予想"])
+tab1,tab2,tab3 = st.tabs(["⭐シンプル","📊詳細","📱ドラッグ予想"])
 
 # ===============================
 # 簡易版
 # ===============================
 with tab1:
 
-    st.subheader("簡易評価（☆◎〇□△×）")
+    st.subheader("シンプル評価（☆◎〇□△×）")
     simple = {}
 
     for b in boats:
@@ -126,7 +126,7 @@ with tab1:
 
     rank = sorted(simple_scores.items(), key=lambda x: x[1], reverse=True)
 
-    st.subheader("簡易ランキング")
+    st.subheader("シンプルランキング")
 
     for i, (b, s) in enumerate(rank, 1):
         percent = simple_percent[b]
@@ -276,6 +276,7 @@ with tab3:
         update_streamlit=True,
         key="canvas_drag"
     )
+
 
 
 
