@@ -210,7 +210,7 @@ with tab3:
 
     base_mode = st.radio(
         "初期並び",
-        ["簡易版ランキング","詳細版ランキング","自由"],
+        ["シンプルランキング","詳細ランキング","自由"],
         horizontal=True
     )
 
@@ -276,6 +276,7 @@ with tab3:
         update_streamlit=True,
         key="canvas_drag"
     )
+
 
 
 
