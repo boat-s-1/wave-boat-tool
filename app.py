@@ -136,45 +136,70 @@ with tab1:
 # 詳細版
 # ===============================
 with tab2:
+
     st.subheader("詳細入力")
     detail = {}
 
     for b in boats:
         st.markdown(f"### {b}号艇")
-        c1,c2,c3,c4=st.columns(4)
+        c1, c2, c3, c4 = st.columns(4)
+
         with c1:
-            motor=st.number_input("モーター",0.0,10.0,5.0,0.1,key=f"dm{b}")
+            motor = st.number_input("モーター", 0.0, 10.0, 5.0, 0.1, key=f"dm{b}")
         with c2:
-            local=st.number_input("当地勝率",0.0,10.0,5.0,0.1,key=f"dl{b}")
+            local = st.number_input("当地勝率", 0.0, 10.0, 5.0, 0.1, key=f"dl{b}")
         with c3:
-            start=st.number_input("ST",0.05,0.30,0.18,0.01,key=f"ds{b}")
+            start = st.number_input("ST", 0.05, 0.30, 0.18, 0.01, key=f"ds{b}")
         with c4:
-            expo=st.number_input("展示",6.0,8.0,6.90,0.01,key=f"de{b}")
-        detail[b]={"motor":motor,"local":local,"start":start,"expo":expo}
+            expo = st.number_input("展示", 6.0, 8.0, 6.90, 0.01, key=f"de{b}")
+
+        detail[b] = {
+            "motor": motor,
+            "local": local,
+            "start": start,
+            "expo": expo
+        }
 
     st.markdown("### 重み設定")
-    w1,w2,w3,w4=st.columns(4)
-    with w1: wm=st.slider("モーター重視",0,5,2)
-    with w2: wl=st.slider("当地重視",0,5,2)
-    with w3: ws=st.slider("ST重視",0,5,2)
-    with w4: we=st.slider("展示重視",0,5,2)
+    w1, w2, w3, w4 = st.columns(4)
+    with w1: wm = st.slider("モーター重視", 0, 5, 2)
+    with w2: wl = st.slider("当地重視", 0, 5, 2)
+    with w3: ws = st.slider("ST重視", 0, 5, 2)
+    with w4: we = st.slider("展示重視", 0, 5, 2)
 
+    # スコア
     detail_scores = {}
     for b in boats:
         detail_scores[b] = (
-            detail[b]["motor"]*wm +
-            detail[b]["local"]*wl +
-            (1/detail[b]["start"])*ws +
-            (1/detail[b]["expo"])*we
+            detail[b]["motor"] * wm +
+            detail[b]["local"] * wl +
+            (1 / detail[b]["start"]) * ws +
+            (1 / detail[b]["expo"]) * we
         )
 
-    rank_detail = sorted(detail_scores.items(), key=lambda x:x[1], reverse=True)
-    max_score = max(detail_scores.values())
+    # ★簡易版と同じ：合計で％化
+    total_score = sum(detail_scores.values())
+
+    detail_percent = {}
+    for b, s in detail_scores.items():
+        if total_score == 0:
+            detail_percent[b] = 0
+        else:
+            detail_percent[b] = s / total_score * 100
+
+    rank_detail = sorted(detail_scores.items(), key=lambda x: x[1], reverse=True)
 
     st.subheader("詳細ランキング")
-    for i,(b,s) in enumerate(rank_detail,1):
-        percent = 0 if max_score==0 else s/max_score*100
-        show_rank_card(i,b,percent,detail[b])
+
+    for i, (b, s) in enumerate(rank_detail, 1):
+        percent = detail_percent[b]
+
+        show_rank_card(
+            i,
+            b,
+            percent,
+            detail=detail[b]
+        )
 
 # ===============================
 # ドラッグ予想
@@ -251,6 +276,7 @@ with tab3:
         update_streamlit=True,
         key="canvas_drag"
     )
+
 
 
 
