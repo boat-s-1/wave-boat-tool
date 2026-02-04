@@ -209,7 +209,7 @@ with tab3:
     objects.append({
     "type": "triangle",
     "left": 170,
-    "top": 160,
+    "top": 45,
     "width": 40,
     "height": 40,
     "fill": "#ff7abf",
@@ -232,6 +232,7 @@ canvas = st_canvas(
     update_streamlit=True,
     key="canvas_drag"
 )
+
 
 
 
