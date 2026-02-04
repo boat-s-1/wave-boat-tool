@@ -207,7 +207,7 @@ with tab3:
             "fill": "black"
         })
 
-  init_draw = {
+init_draw = {
     "version": "4.4.0",
     "objects": objects
 }
@@ -221,6 +221,7 @@ canvas = st_canvas(
     update_streamlit=True,
     key="canvas_drag"
 )
+
 
 
 
