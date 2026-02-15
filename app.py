@@ -276,26 +276,40 @@ with tab3:
         update_streamlit=True,
         key="canvas_drag"
     )
+import streamlit as st
+import pandas as pd
+
 st.subheader("補正展示タイム")
 
-boats = [1,2,3,4,5,6]
+boats = [1, 2, 3, 4, 5, 6]
 
+# ===============================
+# 入力
+# ===============================
 correct = {}
 
 st.markdown("### 各艇データ入力")
 
 for b in boats:
     st.markdown(f"#### {b}号艇")
-    c1,c2,c3,c4 = st.columns(4)
+    c1, c2, c3, c4 = st.columns(4)
 
     with c1:
-        expo = st.number_input("展示タイム", 6.0, 8.0, 6.90, 0.01, key=f"cex{b}")
+        expo = st.number_input(
+            "展示タイム", 6.0, 8.0, 6.90, 0.01, key=f"cex{b}"
+        )
     with c2:
-        straight = st.number_input("直線タイム", 0.0, 10.0, 5.0, 0.01, key=f"cst{b}")
+        straight = st.number_input(
+            "直線タイム", 0.0, 10.0, 6.30, 0.01, key=f"cst{b}"
+        )
     with c3:
-        lap = st.number_input("1周タイム", 30.0, 60.0, 37.0, 0.01, key=f"clp{b}")
+        lap = st.number_input(
+            "1周タイム", 30.0, 60.0, 37.00, 0.01, key=f"clp{b}"
+        )
     with c4:
-        turn = st.number_input("回り足", 1, 10, 5, 1, key=f"ctr{b}")
+        turn = st.number_input(
+            "回り足", 1, 10, 5, 1, key=f"ctr{b}"
+        )
 
     correct[b] = {
         "expo": expo,
@@ -304,10 +318,9 @@ for b in boats:
         "turn": turn
     }
 
-# -------------------------
+# ===============================
 # 補正計算
-# -------------------------
-
+# ===============================
 corrected_time = {}
 lap_plus_expo = {}
 
@@ -320,20 +333,18 @@ for b in boats:
         - correct[b]["turn"] * 0.02
     )
 
-    # ★1号艇補正（展示が出やすい分だけ少し悪化）
+    # ★1号艇補正（展示が出やすい分）
     if b == 1:
         base += 0.05
 
-    corrected_time[b] = base
-
-    lap_plus_expo[b] = (
-        correct[b]["expo"] + correct[b]["lap"]
+    corrected_time[b] = round(base, 3)
+    lap_plus_expo[b] = round(
+        correct[b]["expo"] + correct[b]["lap"], 2
     )
 
-# -------------------------
-# 表示
-# -------------------------
-
+# ===============================
+# 補正展示タイム順位表示
+# ===============================
 st.subheader("補正展示タイム順位")
 
 rank_correct = sorted(corrected_time.items(), key=lambda x: x[1])
@@ -341,9 +352,9 @@ rank_correct = sorted(corrected_time.items(), key=lambda x: x[1])
 for i, (b, v) in enumerate(rank_correct):
 
     if i == 0:
-        bg = "#ff4d4d"   # 1位：赤
+        bg = "#ff5c5c"   # 1位：赤
     elif i == 1:
-        bg = "#ffe066"   # 2位：黄色
+        bg = "#ffd84d"   # 2位：黄
     else:
         bg = "#f3f3f3"
 
@@ -351,18 +362,21 @@ for i, (b, v) in enumerate(rank_correct):
         f"""
         <div style="
             background:{bg};
-            padding:10px;
+            padding:12px;
             border-radius:10px;
-            margin-bottom:6px;">
+            margin-bottom:8px;
+            font-size:16px;">
             <b>{i+1}位　{b}号艇</b><br>
-            補正展示タイム：{v:.3f}<br>
-            展示＋1周：{lap_plus_expo[b]:.2f}
+            補正展示タイム：{v}<br>
+            展示＋1周：{lap_plus_expo[b]}
         </div>
         """,
         unsafe_allow_html=True
     )
-import pandas as pd
 
+# ===============================
+# 公式風 比較表
+# ===============================
 st.subheader("展示比較表（公式風）")
 
 rows = []
@@ -378,25 +392,32 @@ for b in boats:
 
 df = pd.DataFrame(rows).set_index("艇")
 
-# -------------------
-# 色付け関数
-# -------------------
+# ===============================
+# 色付け（公式仕様）
+# ===============================
 def highlight_rank(s):
-    order = s.rank(method="min", ascending=True)
 
-    def color(v):
-        r = order.loc[s == v].iloc[0]
+    # まわり足だけ「大きい方が良い」
+    if s.name == "まわり足":
+        order = s.rank(method="min", ascending=False)
+    else:
+        order = s.rank(method="min", ascending=True)
+
+    colors = []
+    for v in s:
+        r = order[s == v].iloc[0]
         if r == 1:
-            return "background-color: #ff5c5c"   # 赤
+            colors.append("background-color: #ff5c5c")
         elif r == 2:
-            return "background-color: #ffd84d"   # 黄
-        return ""
-
-    return [color(v) for v in s]
+            colors.append("background-color: #ffd84d")
+        else:
+            colors.append("")
+    return colors
 
 styled = df.style.apply(highlight_rank, axis=0)
 
 st.dataframe(styled, use_container_width=True)
+
 
 
 
