@@ -276,23 +276,20 @@ with tab3:
         update_streamlit=True,
         key="canvas_drag"
     )
-import streamlit as st
 import pandas as pd
+import streamlit as st
 
 st.subheader("補正展示タイム")
 
-boats = [1, 2, 3, 4, 5, 6]
+boats = [1,2,3,4,5,6]
 
-# ===============================
-# 入力
-# ===============================
 correct = {}
 
 st.markdown("### 各艇データ入力")
 
 for b in boats:
     st.markdown(f"#### {b}号艇")
-    c1, c2, c3, c4 = st.columns(4)
+    c1,c2,c3,c4 = st.columns(4)
 
     with c1:
         expo = st.number_input(
@@ -300,11 +297,11 @@ for b in boats:
         )
     with c2:
         straight = st.number_input(
-            "直線タイム", 0.0, 10.0, 6.30, 0.01, key=f"cst{b}"
+            "直線タイム", 0.0, 10.0, 5.0, 0.01, key=f"cst{b}"
         )
     with c3:
         lap = st.number_input(
-            "1周タイム", 30.0, 60.0, 37.00, 0.01, key=f"clp{b}"
+            "1周タイム", 30.0, 60.0, 37.0, 0.01, key=f"clp{b}"
         )
     with c4:
         turn = st.number_input(
@@ -318,9 +315,10 @@ for b in boats:
         "turn": turn
     }
 
-# ===============================
+# -------------------------
 # 補正計算
-# ===============================
+# -------------------------
+
 corrected_time = {}
 lap_plus_expo = {}
 
@@ -333,18 +331,18 @@ for b in boats:
         - correct[b]["turn"] * 0.02
     )
 
-    # ★1号艇補正（展示が出やすい分）
+    # 1号艇補正（イン有利分）
     if b == 1:
         base += 0.05
 
-    corrected_time[b] = round(base, 3)
-    lap_plus_expo[b] = round(
-        correct[b]["expo"] + correct[b]["lap"], 2
-    )
+    corrected_time[b] = base
 
-# ===============================
-# 補正展示タイム順位表示
-# ===============================
+    lap_plus_expo[b] = correct[b]["expo"] + correct[b]["lap"]
+
+# -------------------------
+# 順位カード表示
+# -------------------------
+
 st.subheader("補正展示タイム順位")
 
 rank_correct = sorted(corrected_time.items(), key=lambda x: x[1])
@@ -352,9 +350,9 @@ rank_correct = sorted(corrected_time.items(), key=lambda x: x[1])
 for i, (b, v) in enumerate(rank_correct):
 
     if i == 0:
-        bg = "#ff5c5c"   # 1位：赤
+        bg = "#ff4d4d"   # 赤
     elif i == 1:
-        bg = "#ffd84d"   # 2位：黄
+        bg = "#ffe066"   # 黄
     else:
         bg = "#f3f3f3"
 
@@ -362,21 +360,21 @@ for i, (b, v) in enumerate(rank_correct):
         f"""
         <div style="
             background:{bg};
-            padding:12px;
+            padding:10px;
             border-radius:10px;
-            margin-bottom:8px;
-            font-size:16px;">
+            margin-bottom:6px;">
             <b>{i+1}位　{b}号艇</b><br>
-            補正展示タイム：{v}<br>
-            展示＋1周：{lap_plus_expo[b]}
+            補正展示タイム：{v:.3f}<br>
+            展示＋1周：{lap_plus_expo[b]:.2f}
         </div>
         """,
         unsafe_allow_html=True
     )
 
-# ===============================
-# 公式風 比較表
-# ===============================
+# -------------------------
+# 公式風 表
+# -------------------------
+
 st.subheader("展示比較表（公式風）")
 
 rows = []
@@ -392,31 +390,36 @@ for b in boats:
 
 df = pd.DataFrame(rows).set_index("艇")
 
-# ===============================
-# 色付け（公式仕様）
-# ===============================
+# -------------------------
+# 色付け（完全修正版）
+# -------------------------
+
 def highlight_rank(s):
 
-    # まわり足だけ「大きい方が良い」
+    # 回り足は大きいほど良い
     if s.name == "まわり足":
-        order = s.rank(method="min", ascending=False)
+        ranks = s.rank(method="min", ascending=False)
     else:
-        order = s.rank(method="min", ascending=True)
+        ranks = s.rank(method="min", ascending=True)
 
-    colors = []
-    for v in s:
-        r = order[s == v].iloc[0]
+    styles = []
+
+    for idx in s.index:
+        r = ranks.loc[idx]
         if r == 1:
-            colors.append("background-color: #ff5c5c")
+            styles.append("background-color: #ff5c5c")
         elif r == 2:
-            colors.append("background-color: #ffd84d")
+            styles.append("background-color: #ffd84d")
         else:
-            colors.append("")
-    return colors
+            styles.append("")
+    return styles
+
 
 styled = df.style.apply(highlight_rank, axis=0)
 
 st.dataframe(styled, use_container_width=True)
+
+
 
 
 
