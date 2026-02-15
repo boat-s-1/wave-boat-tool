@@ -294,9 +294,11 @@ with tab4:
 
     for b in boats:
         
+for b in boats:
 
     st.markdown(f"#### {b}号艇")
-    c1,c2,c3,c4 = st.columns(4)
+
+    c1, c2, c3, c4 = st.columns(4)
 
     with c1:
         expo = st.number_input("展示タイム", 6.0, 8.0, 6.90, 0.01, key=f"cex{b}")
@@ -306,6 +308,7 @@ with tab4:
         lap = st.number_input("1周タイム", 30.0, 60.0, 37.0, 0.01, key=f"clp{b}")
     with c4:
         turn = st.number_input("回り足", 1, 10, 5, 1, key=f"ctr{b}")
+
 
     correct[b] = {
         "expo": expo,
@@ -411,6 +414,7 @@ styled = df.style \
     .apply(highlight_top2, axis=0, subset=["回り足"], ascending=False)
 
 st.dataframe(styled, use_container_width=True)
+
 
 
 
