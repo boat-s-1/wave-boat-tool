@@ -276,7 +276,7 @@ with tab3:
         drawing_mode="transform",
         background_color="#a0e0ff",
         initial_drawing=init_draw,
-        height=500  
+        height=500,  
         width=360,
         update_streamlit=True,
         key="canvas_drag"
@@ -411,6 +411,7 @@ styled = df.style \
     .apply(highlight_top2, axis=0, subset=["回り足"], ascending=False)
 
 st.dataframe(styled, use_container_width=True)
+
 
 
 
