@@ -276,10 +276,9 @@ with tab3:
         update_streamlit=True,
         key="canvas_drag"
     )
-import pandas as pd
-import streamlit as st
-
 st.subheader("補正展示タイム")
+
+import pandas as pd
 
 boats = [1,2,3,4,5,6]
 
@@ -292,21 +291,13 @@ for b in boats:
     c1,c2,c3,c4 = st.columns(4)
 
     with c1:
-        expo = st.number_input(
-            "展示タイム", 6.0, 8.0, 6.90, 0.01, key=f"cex{b}"
-        )
+        expo = st.number_input("展示タイム", 6.0, 8.0, 6.90, 0.01, key=f"cex{b}")
     with c2:
-        straight = st.number_input(
-            "直線タイム", 0.0, 10.0, 5.0, 0.01, key=f"cst{b}"
-        )
+        straight = st.number_input("直線タイム", 0.0, 10.0, 5.0, 0.01, key=f"cst{b}")
     with c3:
-        lap = st.number_input(
-            "1周タイム", 30.0, 60.0, 37.0, 0.01, key=f"clp{b}"
-        )
+        lap = st.number_input("1周タイム", 30.0, 60.0, 37.0, 0.01, key=f"clp{b}")
     with c4:
-        turn = st.number_input(
-            "回り足", 1, 10, 5, 1, key=f"ctr{b}"
-        )
+        turn = st.number_input("回り足", 1, 10, 5, 1, key=f"ctr{b}")
 
     correct[b] = {
         "expo": expo,
@@ -331,16 +322,15 @@ for b in boats:
         - correct[b]["turn"] * 0.02
     )
 
-    # 1号艇補正（イン有利分）
+    # 1号艇補正（展示が出やすい分）
     if b == 1:
         base += 0.05
 
     corrected_time[b] = base
-
     lap_plus_expo[b] = correct[b]["expo"] + correct[b]["lap"]
 
 # -------------------------
-# 順位カード表示
+# ランキング表示
 # -------------------------
 
 st.subheader("補正展示タイム順位")
@@ -350,9 +340,9 @@ rank_correct = sorted(corrected_time.items(), key=lambda x: x[1])
 for i, (b, v) in enumerate(rank_correct):
 
     if i == 0:
-        bg = "#ff4d4d"   # 赤
+        bg = "#ff4d4d"   # 1位
     elif i == 1:
-        bg = "#ffe066"   # 黄
+        bg = "#ffe066"   # 2位
     else:
         bg = "#f3f3f3"
 
@@ -378,54 +368,41 @@ for i, (b, v) in enumerate(rank_correct):
 st.subheader("展示比較表（公式風）")
 
 rows = []
-
 for b in boats:
     rows.append({
         "艇": b,
         "展示": correct[b]["expo"],
         "一周": correct[b]["lap"],
-        "まわり足": correct[b]["turn"],
+        "回り足": correct[b]["turn"],
         "直線": correct[b]["straight"]
     })
 
 df = pd.DataFrame(rows).set_index("艇")
 
 # -------------------------
-# 色付け（完全修正版）
+# 色付け（※バグ修正版）
 # -------------------------
+def highlight_top2(s, ascending=True):
 
-def highlight_rank(s):
-
-    # 回り足は大きいほど良い
-    if s.name == "まわり足":
-        ranks = s.rank(method="min", ascending=False)
-    else:
-        ranks = s.rank(method="min", ascending=True)
+    order = s.rank(method="min", ascending=ascending)
 
     styles = []
-
-    for idx in s.index:
-        r = ranks.loc[idx]
+    for r in order:
         if r == 1:
-            styles.append("background-color: #ff5c5c")
+            styles.append("background-color: #ff5c5c")  # 赤
         elif r == 2:
-            styles.append("background-color: #ffd84d")
+            styles.append("background-color: #ffd84d")  # 黄
         else:
             styles.append("")
     return styles
 
 
-styled = df.style.apply(highlight_rank, axis=0)
+styled = df.style \
+    .apply(highlight_top2, axis=0, subset=["展示", "一周"], ascending=True) \
+    .apply(highlight_top2, axis=0, subset=["直線"], ascending=True) \
+    .apply(highlight_top2, axis=0, subset=["回り足"], ascending=False)
 
 st.dataframe(styled, use_container_width=True)
-
-
-
-
-
-
-
-
 
 
 
