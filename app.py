@@ -276,22 +276,22 @@ with tab3:
         drawing_mode="transform",
         background_color="#a0e0ff",
         initial_drawing=init_draw,
-        height=500,
+        height=500  
         width=360,
         update_streamlit=True,
         key="canvas_drag"
     )
 
 with tab4:
-st.subheader("補正展示タイム")
+     st.subheader("補正展示タイム")
 
-import pandas as pd
+     import pandas as pd
 
-boats = [1,2,3,4,5,6]
+     boats = [1,2,3,4,5,6]
 
-correct = {}
+     correct = {}
 
-st.markdown("### 各艇データ入力")
+     st.markdown("### 各艇データ入力")
 
 for b in boats:
     st.markdown(f"#### {b}号艇")
@@ -410,6 +410,7 @@ styled = df.style \
     .apply(highlight_top2, axis=0, subset=["回り足"], ascending=False)
 
 st.dataframe(styled, use_container_width=True)
+
 
 
 
