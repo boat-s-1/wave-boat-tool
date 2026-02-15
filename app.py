@@ -282,7 +282,7 @@ with tab3:
         key="canvas_drag"
     )
 
-    with tab4:
+with tab4:
 st.subheader("補正展示タイム")
 
 import pandas as pd
@@ -410,6 +410,7 @@ styled = df.style \
     .apply(highlight_top2, axis=0, subset=["回り足"], ascending=False)
 
 st.dataframe(styled, use_container_width=True)
+
 
 
 
