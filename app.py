@@ -291,8 +291,6 @@ with tab4:
     correct = {}
 
     st.markdown("### 各艇データ入力")
-
-    for b in boats:
         
 for b in boats:
 
@@ -414,6 +412,7 @@ styled = df.style \
     .apply(highlight_top2, axis=0, subset=["回り足"], ascending=False)
 
 st.dataframe(styled, use_container_width=True)
+
 
 
 
