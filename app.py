@@ -283,136 +283,134 @@ with tab3:
         key="canvas_drag"
     )
 
+# ===============================
+# 補正展示タイム
+# ===============================
 with tab4:
 
     st.subheader("補正展示タイム")
 
     boats = [1,2,3,4,5,6]
-
     correct = {}
 
     st.markdown("### 各艇データ入力")
-        
-for b in boats:
 
-    st.markdown(f"#### {b}号艇")
+    for b in boats:
 
-    c1, c2, c3, c4 = st.columns(4)
+        st.markdown(f"#### {b}号艇")
 
-    with c1:
-        expo = st.number_input("展示タイム", 6.0, 8.0, 6.90, 0.01, key=f"cex{b}")
-    with c2:
-        straight = st.number_input("直線タイム", 0.0, 10.0, 5.0, 0.01, key=f"cst{b}")
-    with c3:
-        lap = st.number_input("1周タイム", 30.0, 60.0, 37.0, 0.01, key=f"clp{b}")
-    with c4:
-        turn = st.number_input("回り足", 1, 10, 5, 1, key=f"ctr{b}")
+        c1, c2, c3, c4 = st.columns(4)
 
+        with c1:
+            expo = st.number_input("展示タイム", 6.0, 8.0, 6.90, 0.01, key=f"cex{b}")
+        with c2:
+            straight = st.number_input("直線タイム", 0.0, 10.0, 5.0, 0.01, key=f"cst{b}")
+        with c3:
+            lap = st.number_input("1周タイム", 30.0, 60.0, 37.0, 0.01, key=f"clp{b}")
+        with c4:
+            turn = st.number_input("回り足", 1, 10, 5, 1, key=f"ctr{b}")
 
-    correct[b] = {
-        "expo": expo,
-        "straight": straight,
-        "lap": lap,
-        "turn": turn
-    }
+        correct[b] = {
+            "expo": expo,
+            "straight": straight,
+            "lap": lap,
+            "turn": turn
+        }
 
-# -------------------------
-# 補正計算
-# -------------------------
+    # -------------------------
+    # 補正計算
+    # -------------------------
+    corrected_time = {}
+    lap_plus_expo = {}
 
-corrected_time = {}
-lap_plus_expo = {}
+    for b in boats:
 
-for b in boats:
+        base = (
+            correct[b]["expo"]
+            + correct[b]["lap"] * 0.10
+            - correct[b]["straight"] * 0.05
+            - correct[b]["turn"] * 0.02
+        )
 
-    base = (
-        correct[b]["expo"]
-        + correct[b]["lap"] * 0.10
-        - correct[b]["straight"] * 0.05
-        - correct[b]["turn"] * 0.02
-    )
+        # 1号艇補正
+        if b == 1:
+            base += 0.05
 
-    # 1号艇補正（展示が出やすい分）
-    if b == 1:
-        base += 0.05
+        corrected_time[b] = base
+        lap_plus_expo[b] = correct[b]["expo"] + correct[b]["lap"]
 
-    corrected_time[b] = base
-    lap_plus_expo[b] = correct[b]["expo"] + correct[b]["lap"]
+    # -------------------------
+    # ランキング表示
+    # -------------------------
+    st.subheader("補正展示タイム順位")
 
-# -------------------------
-# ランキング表示
-# -------------------------
+    rank_correct = sorted(corrected_time.items(), key=lambda x: x[1])
 
-st.subheader("補正展示タイム順位")
+    for i, (b, v) in enumerate(rank_correct):
 
-rank_correct = sorted(corrected_time.items(), key=lambda x: x[1])
-
-for i, (b, v) in enumerate(rank_correct):
-
-    if i == 0:
-        bg = "#ff4d4d"   # 1位
-    elif i == 1:
-        bg = "#ffe066"   # 2位
-    else:
-        bg = "#f3f3f3"
-
-    st.markdown(
-        f"""
-        <div style="
-            background:{bg};
-            padding:10px;
-            border-radius:10px;
-            margin-bottom:6px;">
-            <b>{i+1}位　{b}号艇</b><br>
-            補正展示タイム：{v:.3f}<br>
-            展示＋1周：{lap_plus_expo[b]:.2f}
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-# -------------------------
-# 公式風 表
-# -------------------------
-
-st.subheader("展示比較表（公式風）")
-
-rows = []
-for b in boats:
-    rows.append({
-        "艇": b,
-        "展示": correct[b]["expo"],
-        "一周": correct[b]["lap"],
-        "回り足": correct[b]["turn"],
-        "直線": correct[b]["straight"]
-    })
-
-df = pd.DataFrame(rows).set_index("艇")
-
-# -------------------------
-# 色付け（※バグ修正版）
-# -------------------------
-def highlight_top2(s, ascending=True):
-
-    order = s.rank(method="min", ascending=ascending)
-
-    styles = []
-    for r in order:
-        if r == 1:
-            styles.append("background-color: #ff5c5c")  # 赤
-        elif r == 2:
-            styles.append("background-color: #ffd84d")  # 黄
+        if i == 0:
+            bg = "#ff4d4d"
+        elif i == 1:
+            bg = "#ffe066"
         else:
-            styles.append("")
-    return styles
+            bg = "#f3f3f3"
 
+        st.markdown(
+            f"""
+            <div style="
+                background:{bg};
+                padding:10px;
+                border-radius:10px;
+                margin-bottom:6px;">
+                <b>{i+1}位　{b}号艇</b><br>
+                補正展示タイム：{v:.3f}<br>
+                展示＋1周：{lap_plus_expo[b]:.2f}
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
-styled = df.style \
-    .apply(highlight_top2, axis=0, subset=["展示", "一周"], ascending=True) \
-    .apply(highlight_top2, axis=0, subset=["直線"], ascending=True) \
-    .apply(highlight_top2, axis=0, subset=["回り足"], ascending=False)
+    # -------------------------
+    # 表
+    # -------------------------
+    st.subheader("展示比較表（公式風）")
 
-st.dataframe(styled, use_container_width=True)
+    rows = []
+    for b in boats:
+        rows.append({
+            "艇": b,
+            "展示": correct[b]["expo"],
+            "一周": correct[b]["lap"],
+            "回り足": correct[b]["turn"],
+            "直線": correct[b]["straight"]
+        })
+
+    df = pd.DataFrame(rows).set_index("艇")
+
+    # -------------------------
+    # 色付け（上位2つだけ）
+    # -------------------------
+    def highlight_top2(s, ascending=True):
+
+        order = s.rank(method="min", ascending=ascending)
+
+        out = []
+        for r in order:
+            if r == 1:
+                out.append("background-color:#ff5c5c")
+            elif r == 2:
+                out.append("background-color:#ffd84d")
+            else:
+                out.append("")
+        return out
+
+    styled = df.style \
+        .apply(lambda s: highlight_top2(s, ascending=True), subset=["展示", "一周"]) \
+        .apply(lambda s: highlight_top2(s, ascending=True), subset=["直線"]) \
+        .apply(lambda s: highlight_top2(s, ascending=False), subset=["回り足"])
+
+    st.dataframe(styled, use_container_width=True)
+
 
 
 
