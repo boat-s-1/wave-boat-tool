@@ -283,17 +283,18 @@ with tab3:
     )
 
 with tab4:
-     st.subheader("補正展示タイム")
 
-     import pandas as pd
+    st.subheader("補正展示タイム")
 
-     boats = [1,2,3,4,5,6]
+    boats = [1,2,3,4,5,6]
 
-     correct = {}
+    correct = {}
 
-     st.markdown("### 各艇データ入力")
+    st.markdown("### 各艇データ入力")
 
-for b in boats:
+    for b in boats:
+        
+
     st.markdown(f"#### {b}号艇")
     c1,c2,c3,c4 = st.columns(4)
 
@@ -410,6 +411,7 @@ styled = df.style \
     .apply(highlight_top2, axis=0, subset=["回り足"], ascending=False)
 
 st.dataframe(styled, use_container_width=True)
+
 
 
 
