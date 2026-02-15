@@ -361,6 +361,43 @@ for i, (b, v) in enumerate(rank_correct):
         """,
         unsafe_allow_html=True
     )
+import pandas as pd
+
+st.subheader("展示比較表（公式風）")
+
+rows = []
+
+for b in boats:
+    rows.append({
+        "艇": b,
+        "展示": correct[b]["expo"],
+        "一周": correct[b]["lap"],
+        "まわり足": correct[b]["turn"],
+        "直線": correct[b]["straight"]
+    })
+
+df = pd.DataFrame(rows).set_index("艇")
+
+# -------------------
+# 色付け関数
+# -------------------
+def highlight_rank(s):
+    order = s.rank(method="min", ascending=True)
+
+    def color(v):
+        r = order.loc[s == v].iloc[0]
+        if r == 1:
+            return "background-color: #ff5c5c"   # 赤
+        elif r == 2:
+            return "background-color: #ffd84d"   # 黄
+        return ""
+
+    return [color(v) for v in s]
+
+styled = df.style.apply(highlight_rank, axis=0)
+
+st.dataframe(styled, use_container_width=True)
+
 
 
 
