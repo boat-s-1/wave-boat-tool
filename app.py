@@ -84,7 +84,12 @@ with c3:
     race_no = st.selectbox("レース", list(range(1,13)))
 
 st.caption(f"{race_date}　{place} {race_no}R")
-tab1,tab2,tab3 = st.tabs(["⭐シンプル","📊詳細","📱ドラッグ予想"])
+tab1, tab2, tab3, tab4 = st.tabs([
+    "簡易版",
+    "詳細版",
+    "ドラッグ予想",
+    "補正展示タイム"
+])
 
 # ===============================
 # 簡易版
@@ -276,6 +281,8 @@ with tab3:
         update_streamlit=True,
         key="canvas_drag"
     )
+    with tab4:
+
 st.subheader("補正展示タイム")
 
 import pandas as pd
@@ -403,6 +410,7 @@ styled = df.style \
     .apply(highlight_top2, axis=0, subset=["回り足"], ascending=False)
 
 st.dataframe(styled, use_container_width=True)
+
 
 
 
