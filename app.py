@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 from streamlit_drawable_canvas import st_canvas
 import numpy as np
 import datetime
@@ -412,6 +413,7 @@ styled = df.style \
     .apply(highlight_top2, axis=0, subset=["回り足"], ascending=False)
 
 st.dataframe(styled, use_container_width=True)
+
 
 
 
