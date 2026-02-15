@@ -276,6 +276,92 @@ with tab3:
         update_streamlit=True,
         key="canvas_drag"
     )
+st.subheader("補正展示タイム")
+
+boats = [1,2,3,4,5,6]
+
+correct = {}
+
+st.markdown("### 各艇データ入力")
+
+for b in boats:
+    st.markdown(f"#### {b}号艇")
+    c1,c2,c3,c4 = st.columns(4)
+
+    with c1:
+        expo = st.number_input("展示タイム", 6.0, 8.0, 6.90, 0.01, key=f"cex{b}")
+    with c2:
+        straight = st.number_input("直線タイム", 0.0, 10.0, 5.0, 0.01, key=f"cst{b}")
+    with c3:
+        lap = st.number_input("1周タイム", 30.0, 60.0, 37.0, 0.01, key=f"clp{b}")
+    with c4:
+        turn = st.number_input("回り足", 1, 10, 5, 1, key=f"ctr{b}")
+
+    correct[b] = {
+        "expo": expo,
+        "straight": straight,
+        "lap": lap,
+        "turn": turn
+    }
+
+# -------------------------
+# 補正計算
+# -------------------------
+
+corrected_time = {}
+lap_plus_expo = {}
+
+for b in boats:
+
+    base = (
+        correct[b]["expo"]
+        + correct[b]["lap"] * 0.10
+        - correct[b]["straight"] * 0.05
+        - correct[b]["turn"] * 0.02
+    )
+
+    # ★1号艇補正（展示が出やすい分だけ少し悪化）
+    if b == 1:
+        base += 0.05
+
+    corrected_time[b] = base
+
+    lap_plus_expo[b] = (
+        correct[b]["expo"] + correct[b]["lap"]
+    )
+
+# -------------------------
+# 表示
+# -------------------------
+
+st.subheader("補正展示タイム順位")
+
+rank_correct = sorted(corrected_time.items(), key=lambda x: x[1])
+
+for i, (b, v) in enumerate(rank_correct):
+
+    if i == 0:
+        bg = "#ff4d4d"   # 1位：赤
+    elif i == 1:
+        bg = "#ffe066"   # 2位：黄色
+    else:
+        bg = "#f3f3f3"
+
+    st.markdown(
+        f"""
+        <div style="
+            background:{bg};
+            padding:10px;
+            border-radius:10px;
+            margin-bottom:6px;">
+            <b>{i+1}位　{b}号艇</b><br>
+            補正展示タイム：{v:.3f}<br>
+            展示＋1周：{lap_plus_expo[b]:.2f}
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
 
 
 
