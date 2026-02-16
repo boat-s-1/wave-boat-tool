@@ -4,7 +4,6 @@ from streamlit_drawable_canvas import st_canvas
 import numpy as np
 import datetime
 
-
     # -----------------------
     # 初期化
     # -----------------------
@@ -487,6 +486,7 @@ for b in boats:
         .apply(lambda s: highlight_top2(s, ascending=False), subset=["回り足"])
 
     st.dataframe(styled, use_container_width=True)
+
 
 
 
