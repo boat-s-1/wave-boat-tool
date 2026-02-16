@@ -213,6 +213,55 @@ with tab4:
 
     st.caption(f"※ 場別補正：{place_bias_value:+.4f}")
 
+     # -----------------------
+    # 比較用データフレームの作成
+    # -----------------------
+    st.markdown("### タイム比較・分析表")
+    
+    df_data = []
+    for b in boats:
+        df_data.append({
+            "艇": f"{b}号艇",
+            "展示": correct_input[b]["expo"],
+            "直線": correct_input[b]["straight"],
+            "1周": correct_input[b]["lap"],
+            "回り足": correct_input[b]["turn"],
+            "補正タイム": round(corrected_time[b], 3)
+        })
+    
+    df = pd.DataFrame(df_data)
+
+    # -----------------------
+    # スタイリング関数の定義
+    # -----------------------
+    def highlight_ranks(column):
+        # 展示、1周、補正タイムは「小さい値」が1位
+        if column.name in ["展示", "1周", "補正タイム"]:
+            is_1st = column == column.min()
+            is_2nd = column == column.nsmallest(2).iloc[-1] if len(column.unique()) > 1 else [False]*6
+        # 直線、回り足は「大きい値」が1位
+        else:
+            is_1st = column == column.max()
+            is_2nd = column == column.nlargest(2).iloc[-1] if len(column.unique()) > 1 else [False]*6
+            
+        styles = []
+        for v1, v2 in zip(is_1st, is_2nd):
+            if v1:
+                styles.append('background-color: #ffcccc; color: #cc0000; font-weight: bold;') # 1位: 赤
+            elif v2:
+                styles.append('background-color: #fff9c4; color: #827717; font-weight: bold;') # 2位: 黄
+            else:
+                styles.append('')
+        return styles
+
+    # 表を表示
+    st.dataframe(
+        df.style.apply(highlight_ranks, subset=["展示", "直線", "1周", "回り足", "補正タイム"]),
+        use_container_width=True,
+        hide_index=True
+    )
+
+    st.caption("💡 赤：1位評価、黄：2位評価（タイムは低速・旋回は高得点を評価）")
     # -----------------------
     # 着順入力
     # -----------------------
@@ -259,4 +308,5 @@ with tab4:
 
     else:
         st.write("まだデータがありません")
+
 
