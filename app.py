@@ -61,7 +61,7 @@ if place in st.session_state.place_bias and len(st.session_state.place_bias[plac
 
         st.write(f"{place} 補正値： {bias:+.4f}")
 
-    else:
+else:
         st.write("まだデータがありません")
 
 # ---------------------------
@@ -514,6 +514,7 @@ with tab4:
         .apply(lambda s: highlight_top2(s, False), subset=["回り足"])
 
     st.dataframe(styled, use_container_width=True)
+
 
 
 
