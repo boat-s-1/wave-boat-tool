@@ -382,37 +382,39 @@ with tab4:
             "turn": turn
         }
 
-    # -------------------------
-    # 補正計算
-    # -------------------------
-    corrected_time = {}
-    lap_plus_expo = {}
+   # -------------------------
+# 補正計算
+# -------------------------
+corrected_time = {}
+lap_plus_expo = {}
 
-    for b in boats:
-
-        base = (
-            correct[b]["expo"]
-            + correct[b]["lap"] * 0.10
-            - correct[b]["straight"] * 0.05
-            - correct[b]["turn"] * 0.02
-        )
-
-        # 1号艇補正
-        if b == 1:
-            base += 0.05
-
-        corrected_time[b] = base
-        place_bias_value = 0
-
+# 場別補正値（先に1回だけ計算）
+place_bias_value = 0
 if "place_bias" in st.session_state:
     if place in st.session_state.place_bias:
         recent = st.session_state.place_bias[place][-30:]
         if len(recent) > 0:
             place_bias_value = sum(recent) / len(recent)
 
-corrected_time[b] = base + place_bias_value
+for b in boats:
 
-        lap_plus_expo[b] = correct[b]["expo"] + correct[b]["lap"]
+    base = (
+        correct[b]["expo"]
+        + correct[b]["lap"] * 0.10
+        - correct[b]["straight"] * 0.05
+        - correct[b]["turn"] * 0.02
+    )
+
+    # 1号艇補正
+    if b == 1:
+        base += 0.05
+
+    # ★場別補正を加算
+    corrected_time[b] = base + place_bias_value
+
+    lap_plus_expo[b] = correct[b]["expo"] + correct[b]["lap"]
+    st.caption(f"※ {place} 場補正適用値：{place_bias_value:+.4f}")
+
 
     # -------------------------
     # ランキング表示
@@ -485,6 +487,7 @@ corrected_time[b] = base + place_bias_value
         .apply(lambda s: highlight_top2(s, ascending=False), subset=["回り足"])
 
     st.dataframe(styled, use_container_width=True)
+
 
 
 
