@@ -10,23 +10,6 @@ boats = [1,2,3,4,5,6]
 boat_colors = {1:"#ffffff",2:"#000000",3:"#ff0000",4:"#0000ff",5:"#ffff00",6:"#00ff00"}
 mark_score = {"☆":6,"◎":5,"〇":4,"□":3,"△":2,"×":1}
 
-
-# -----------------------
-# 保存ボタン
-# -----------------------
-if st.button("このレース結果を補正学習に追加"):
-
-        avg = np.mean(list(corrected_time.values()))
-
-        if place not in st.session_state.place_bias:
-            st.session_state.place_bias[place] = []
-
-        for b in boats:
-            diff = corrected_time[b] - avg
-            st.session_state.place_bias[place].append(diff)
-
-        st.success("補正データを保存しました")
-
 # -----------------------
 # 現在の場別補正表示
 # -----------------------
@@ -445,6 +428,7 @@ with tab4:
 
     else:
         st.write("まだデータがありません")
+
 
 
 
