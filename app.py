@@ -54,8 +54,8 @@ if st.button("このレース結果を補正学習に追加"):
 # -----------------------
 st.markdown("### 現在の競艇場別補正値（直近30件平均）")
 
-    if place in st.session_state.place_bias and len(st.session_state.place_bias[place]) > 0:
-
+if place in st.session_state.place_bias and len(st.session_state.place_bias[place]) > 0:
+            
         recent = st.session_state.place_bias[place][-30:]
         bias = float(np.mean(recent))
 
@@ -514,6 +514,7 @@ with tab4:
         .apply(lambda s: highlight_top2(s, False), subset=["回り足"])
 
     st.dataframe(styled, use_container_width=True)
+
 
 
 
