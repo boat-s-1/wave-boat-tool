@@ -3,6 +3,71 @@ import pandas as pd
 from streamlit_drawable_canvas import st_canvas
 import numpy as np
 import datetime
+with tab4:
+    st.subheader("結果入力 → 競艇場別補正を学習")
+
+    import numpy as np
+
+    # -----------------------
+    # 初期化
+    # -----------------------
+    if "place_bias" not in st.session_state:
+        st.session_state.place_bias = {}
+
+    # -----------------------
+    # 競艇場選択
+    # -----------------------
+    place = st.selectbox(
+        "競艇場",
+        ["蒲郡","常滑","浜名湖","住之江","大村","徳山","唐津"]
+    )
+
+    # -----------------------
+    # 着順入力
+    # -----------------------
+    st.markdown("### 実際の着順を入力（1〜6）")
+
+    result = {}
+    cols = st.columns(6)
+
+    for i,b in enumerate(boats):
+        with cols[i]:
+            result[b] = st.number_input(
+                f"{b}号艇",
+                1, 6, b,
+                key=f"res_{b}"
+            )
+
+    # -----------------------
+    # 保存ボタン
+    # -----------------------
+    if st.button("このレース結果を補正学習に追加"):
+
+        avg = np.mean(list(corrected_time.values()))
+
+        if place not in st.session_state.place_bias:
+            st.session_state.place_bias[place] = []
+
+        for b in boats:
+            diff = corrected_time[b] - avg
+            st.session_state.place_bias[place].append(diff)
+
+        st.success("補正データを保存しました")
+
+    # -----------------------
+    # 現在の場別補正表示
+    # -----------------------
+    st.markdown("### 現在の競艇場別補正値（直近30件平均）")
+
+    if place in st.session_state.place_bias and len(st.session_state.place_bias[place]) > 0:
+
+        recent = st.session_state.place_bias[place][-30:]
+        bias = float(np.mean(recent))
+
+        st.write(f"{place} 補正値： {bias:+.4f}")
+
+    else:
+        st.write("まだデータがありません")
 
 # ---------------------------
 # ページ設定
@@ -337,6 +402,16 @@ with tab4:
             base += 0.05
 
         corrected_time[b] = base
+        place_bias_value = 0
+
+if "place_bias" in st.session_state:
+    if place in st.session_state.place_bias:
+        recent = st.session_state.place_bias[place][-30:]
+        if len(recent) > 0:
+            place_bias_value = sum(recent) / len(recent)
+
+corrected_time[b] = base + place_bias_value
+
         lap_plus_expo[b] = correct[b]["expo"] + correct[b]["lap"]
 
     # -------------------------
@@ -410,6 +485,7 @@ with tab4:
         .apply(lambda s: highlight_top2(s, ascending=False), subset=["回り足"])
 
     st.dataframe(styled, use_container_width=True)
+
 
 
 
