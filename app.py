@@ -120,4 +120,143 @@ with tab2:
         pct = (s / total_d * 100) if total_d > 0 else 0
         show_rank_card(i, b, pct, detail=detail_data[b])
 
-# tab3, tab4 は前回のコードと同様に機能します
+with tab3:
+    st.subheader("SNS用ドラッグ予想")
+    objects = []
+    for i, b in enumerate(boats):
+        # 簡易版の評価が高い艇を少し右（前）に出す演出
+        offset = 40 if simple_percent[b] >= 20 else 0
+        x, y = 60 + offset, 80 + i * 60
+        
+        objects.append({"type": "circle", "left": x, "top": y, "radius": 22, "fill": boat_colors[b], "stroke": "black", "strokeWidth": 2})
+        objects.append({"type": "text", "left": x - 8, "top": y - 14, "text": str(b), "fontSize": 24, "fontWeight": "bold", "fill": "black" if b==1 or b==5 else "white"})
+
+    objects.append({"type": "triangle", "left": 220, "top": 100, "width": 50, "height": 50, "fill": "#ff7abf"})
+
+    canvas = st_canvas(
+        drawing_mode="transform",
+        background_color="#a0e0ff",
+        initial_drawing={"version": "4.4.0", "objects": objects},
+        height=500, width=360, key="canvas_drag"
+    )
+
+with tab4:
+   with tab4:
+
+    st.subheader("補正展示タイム")
+
+    # -----------------------
+    # 学習データ初期化
+    # -----------------------
+    if "place_bias" not in st.session_state:
+        st.session_state.place_bias = {}
+
+    # -----------------------
+    # 競艇場選択（学習用）
+    # -----------------------
+    learn_place = st.selectbox(
+        "学習用 競艇場",
+        ["蒲郡","常滑","浜名湖","住之江","大村","徳山","唐津"],
+        key="learn_place"
+    )
+
+    correct = {}
+
+    st.markdown("### 各艇データ入力")
+
+    for b in boats:
+
+        st.markdown(f"#### {b}号艇")
+
+        c1, c2, c3, c4 = st.columns(4)
+
+        with c1:
+            expo = st.number_input("展示タイム", 6.0, 8.0, 6.90, 0.01, key=f"cex{b}")
+        with c2:
+            straight = st.number_input("直線タイム", 0.0, 10.0, 5.0, 0.01, key=f"cst{b}")
+        with c3:
+            lap = st.number_input("1周タイム", 30.0, 60.0, 37.0, 0.01, key=f"clp{b}")
+        with c4:
+            turn = st.number_input("回り足", 1, 10, 5, 1, key=f"ctr{b}")
+
+        correct[b] = {
+            "expo": expo,
+            "straight": straight,
+            "lap": lap,
+            "turn": turn
+        }
+
+    # -----------------------
+    # 補正計算
+    # -----------------------
+    corrected_time = {}
+
+    place_bias_value = 0
+    if learn_place in st.session_state.place_bias:
+        recent = st.session_state.place_bias[learn_place][-30:]
+        if len(recent) > 0:
+            place_bias_value = float(np.mean(recent))
+
+    for b in boats:
+
+        base = (
+            correct[b]["expo"]
+            + correct[b]["lap"] * 0.10
+            - correct[b]["straight"] * 0.05
+            - correct[b]["turn"] * 0.02
+        )
+
+        if b == 1:
+            base += 0.05
+
+        corrected_time[b] = base + place_bias_value
+
+    st.caption(f"※ 場別補正：{place_bias_value:+.4f}")
+
+    # -----------------------
+    # 着順入力
+    # -----------------------
+    st.markdown("### 実際の着順を入力（1〜6）")
+
+    result = {}
+    cols = st.columns(6)
+
+    for i, b in enumerate(boats):
+        with cols[i]:
+            result[b] = st.number_input(
+                f"{b}号艇",
+                1, 6, b,
+                key=f"res_{b}"
+            )
+
+    # -----------------------
+    # 学習保存
+    # -----------------------
+    if st.button("このレース結果を補正学習に追加"):
+
+        avg = np.mean(list(corrected_time.values()))
+
+        if learn_place not in st.session_state.place_bias:
+            st.session_state.place_bias[learn_place] = []
+
+        for b in boats:
+            diff = corrected_time[b] - avg
+            st.session_state.place_bias[learn_place].append(diff)
+
+        st.success("補正データを保存しました")
+
+    # -----------------------
+    # 現在の補正値
+    # -----------------------
+    st.markdown("### 現在の競艇場別補正値（直近30件平均）")
+
+    if learn_place in st.session_state.place_bias and len(st.session_state.place_bias[learn_place]) > 0:
+
+        recent = st.session_state.place_bias[learn_place][-30:]
+        bias = float(np.mean(recent))
+
+        st.write(f"{learn_place} 補正値： {bias:+.4f}")
+
+    else:
+        st.write("まだデータがありません")
+
