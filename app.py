@@ -23,7 +23,7 @@ place = st.selectbox(
 st.markdown("### 実際の着順を入力（1〜6）")
 
 result = {}
-    cols = st.columns(6)
+cols = st.columns(6)
 
     for i,b in enumerate(boats):
         with cols[i]:
@@ -514,6 +514,7 @@ with tab4:
         .apply(lambda s: highlight_top2(s, False), subset=["回り足"])
 
     st.dataframe(styled, use_container_width=True)
+
 
 
 
