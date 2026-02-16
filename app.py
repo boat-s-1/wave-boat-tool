@@ -2,36 +2,14 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import datetime
+from streamlit_drawable_canvas import st_canvas
 
-# -----------------------
-# 初期化
-# -----------------------
-if "place_bias" not in st.session_state:
-        st.session_state.place_bias = {}
+st.set_page_config(page_title="競艇予想ツール", layout="centered")
 
-# -----------------------
-# 競艇場選択
-# -----------------------
-place = st.selectbox(
-        "競艇場",
-        ["蒲郡","常滑","浜名湖","住之江","大村","徳山","唐津"]
-    )
+boats = [1,2,3,4,5,6]
+boat_colors = {1:"#ffffff",2:"#000000",3:"#ff0000",4:"#0000ff",5:"#ffff00",6:"#00ff00"}
+mark_score = {"☆":6,"◎":5,"〇":4,"□":3,"△":2,"×":1}
 
-# -----------------------
-# 着順入力
- # -----------------------
-st.markdown("### 実際の着順を入力（1〜6）")
-
-result = {}
-cols = st.columns(6)
-
-for i,b in enumerate(boats):
-        with cols[i]:
-            result[b] = st.number_input(
-                f"{b}号艇",
-                1, 6, b,
-                key=f"res_{b}"
-            )
 
 # -----------------------
 # 保存ボタン
@@ -359,6 +337,15 @@ with tab4:
     if "place_bias" not in st.session_state:
         st.session_state.place_bias = {}
 
+    # -----------------------
+    # 競艇場選択（学習用）
+    # -----------------------
+    learn_place = st.selectbox(
+        "学習用 競艇場",
+        ["蒲郡","常滑","浜名湖","住之江","大村","徳山","唐津"],
+        key="learn_place"
+    )
+
     correct = {}
 
     st.markdown("### 各艇データ入力")
@@ -385,22 +372,16 @@ with tab4:
             "turn": turn
         }
 
-    # -------------------------
-    # 場別補正値
-    # -------------------------
-    place_bias_value = 0.0
-    if place in st.session_state.place_bias:
-        recent = st.session_state.place_bias[place][-30:]
+    # -----------------------
+    # 補正計算
+    # -----------------------
+    corrected_time = {}
+
+    place_bias_value = 0
+    if learn_place in st.session_state.place_bias:
+        recent = st.session_state.place_bias[learn_place][-30:]
         if len(recent) > 0:
             place_bias_value = float(np.mean(recent))
-
-    st.caption(f"※ {place} 場補正適用値：{place_bias_value:+.4f}")
-
-    # -------------------------
-    # 補正計算
-    # -------------------------
-    corrected_time = {}
-    lap_plus_expo = {}
 
     for b in boats:
 
@@ -415,46 +396,16 @@ with tab4:
             base += 0.05
 
         corrected_time[b] = base + place_bias_value
-        lap_plus_expo[b] = correct[b]["expo"] + correct[b]["lap"]
 
-    # -------------------------
-    # ランキング表示
-    # -------------------------
-    st.subheader("補正展示タイム順位")
+    st.caption(f"※ 場別補正：{place_bias_value:+.4f}")
 
-    rank_correct = sorted(corrected_time.items(), key=lambda x: x[1])
+    # -----------------------
+    # 着順入力
+    # -----------------------
+    st.markdown("### 実際の着順を入力（1〜6）")
 
-    for i, (b, v) in enumerate(rank_correct):
-
-        if i == 0:
-            bg = "#ff4d4d"
-        elif i == 1:
-            bg = "#ffe066"
-        else:
-            bg = "#f3f3f3"
-
-        st.markdown(
-            f"""
-            <div style="
-                background:{bg};
-                padding:10px;
-                border-radius:10px;
-                margin-bottom:6px;">
-                <b>{i+1}位　{b}号艇</b><br>
-                補正展示タイム：{v:.3f}<br>
-                展示＋1周：{lap_plus_expo[b]:.2f}
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
-    # -------------------------
-    # 学習用：着順入力
-    # -------------------------
-    st.markdown("### 実際の着順を入力（学習用）")
-
-    cols = st.columns(6)
     result = {}
+    cols = st.columns(6)
 
     for i, b in enumerate(boats):
         with cols[i]:
@@ -464,56 +415,37 @@ with tab4:
                 key=f"res_{b}"
             )
 
+    # -----------------------
+    # 学習保存
+    # -----------------------
     if st.button("このレース結果を補正学習に追加"):
 
         avg = np.mean(list(corrected_time.values()))
 
-        if place not in st.session_state.place_bias:
-            st.session_state.place_bias[place] = []
+        if learn_place not in st.session_state.place_bias:
+            st.session_state.place_bias[learn_place] = []
 
         for b in boats:
             diff = corrected_time[b] - avg
-            st.session_state.place_bias[place].append(diff)
+            st.session_state.place_bias[learn_place].append(diff)
 
         st.success("補正データを保存しました")
 
-    # -------------------------
-    # 表
-    # -------------------------
-    st.subheader("展示比較表（公式風）")
+    # -----------------------
+    # 現在の補正値
+    # -----------------------
+    st.markdown("### 現在の競艇場別補正値（直近30件平均）")
 
-    rows = []
-    for b in boats:
-        rows.append({
-            "艇": b,
-            "展示": correct[b]["expo"],
-            "一周": correct[b]["lap"],
-            "回り足": correct[b]["turn"],
-            "直線": correct[b]["straight"]
-        })
+    if learn_place in st.session_state.place_bias and len(st.session_state.place_bias[learn_place]) > 0:
 
-    df = pd.DataFrame(rows).set_index("艇")
+        recent = st.session_state.place_bias[learn_place][-30:]
+        bias = float(np.mean(recent))
 
-    def highlight_top2(s, ascending=True):
+        st.write(f"{learn_place} 補正値： {bias:+.4f}")
 
-        order = s.rank(method="min", ascending=ascending)
+    else:
+        st.write("まだデータがありません")
 
-        out = []
-        for r in order:
-            if r == 1:
-                out.append("background-color:#ff5c5c")
-            elif r == 2:
-                out.append("background-color:#ffd84d")
-            else:
-                out.append("")
-        return out
-
-    styled = df.style \
-        .apply(lambda s: highlight_top2(s, True), subset=["展示", "一周"]) \
-        .apply(lambda s: highlight_top2(s, True), subset=["直線"]) \
-        .apply(lambda s: highlight_top2(s, False), subset=["回り足"])
-
-    st.dataframe(styled, use_container_width=True)
 
 
 
