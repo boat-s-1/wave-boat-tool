@@ -4,70 +4,45 @@ import numpy as np
 import datetime
 from streamlit_drawable_canvas import st_canvas
 
-# 1. ページ設定（最初に1回だけ呼び出す）
-st.set_page_config(page_title="競艇予想ツール", layout="wide")
+# 1. ページ設定（アプリの最初に1回だけ！）
+st.set_page_config(page_title="競艇予想ツール", layout="centered")
 
-# 2. 定数・セッションの初期化
+# 2. データの初期化
 boats = [1, 2, 3, 4, 5, 6]
 boat_colors = {1: "#ffffff", 2: "#000000", 3: "#ff0000", 4: "#0000ff", 5: "#ffff00", 6: "#00ff00"}
 mark_score = {"☆": 6, "◎": 5, "〇": 4, "□": 3, "△": 2, "×": 1}
 
+# セッション状態の初期化
 if "place_bias" not in st.session_state:
     st.session_state.place_bias = {}
 
-# ===============================
-# カード表示関数
-# ===============================
-def show_rank_card(rank, boat, percent, detail=None):
-    medal = ["🥇", "🥈", "🥉"]
-    icon = medal[rank-1] if rank <= 3 else f"{rank}位"
-    
-    if percent >= 30:
-        bg, shadow, badge, border = "linear-gradient(135deg,#fff1b8,#ffd700)", "0 0 18px rgba(255,215,0,0.8)", "💮 本命", "2px solid #ffb700"
-    elif percent >= 20:
-        bg, shadow, badge, border = "linear-gradient(135deg,#ffe6f2,#ffd1ea)", "0 0 12px rgba(255,105,180,0.4)", "✨ おすすめ", "1px solid #ffb0c4"
-    else:
-        bg, shadow, badge, border = "linear-gradient(135deg,#ffffff,#f2f2f2)", "0 4px 10px rgba(0,0,0,0.1)", "", "none"
-
-    html = f"""
-    <div style="border-radius:18px; padding:14px 16px; margin-bottom:12px; background:{bg}; box-shadow:{shadow}; border:{border}; color: black;">
-        <div style="font-size:20px;font-weight:bold;">{icon}　{boat}号艇 <span style="font-size:13px;color:#ff2f92;"> {badge}</span></div>
-        <div style="margin-top:6px;font-size:15px;font-weight:bold;">おすすめ度：{percent:.1f}％</div>
-    """
-    if detail:
-        html += f"<div style='margin-top:6px;font-size:14px;'>モーター {detail['motor']}｜当地 {detail['local']}｜ST {detail['start']}｜展示 {detail['expo']}</div>"
-    html += "</div>"
-    st.markdown(html, unsafe_allow_html=True)
-
-# ---------------------------
-# ヘッダ・基本入力
-# ---------------------------
+# 3. ヘッダーと基本情報の入力（ここで place を定義する）
 st.title("🚤 予想ツール")
 c1, c2, c3 = st.columns(3)
 
 with c1:
     race_date = st.date_input("日付", datetime.date.today())
 with c2:
+    # ここで place を定義するので、これ以降で place が使えるようになります
     place = st.selectbox("競艇場", ["蒲郡", "常滑", "浜名湖", "津", "大村", "住之江", "若松", "芦屋"])
 with c3:
     race_no = st.selectbox("レース", list(range(1, 13)))
 
-# -----------------------
-# 現在の場別補正表示（placeが定義された後に実行）
-# -----------------------
-st.info(f"現在の設定: {race_date} {place} {race_no}R")
+# 4. 現在の場別補正表示（place の定義より下に配置）
+st.markdown("### 現在の競艇場別補正値")
+if place in st.session_state.place_bias and len(st.session_state.place_bias[place]) > 0:
+    recent = st.session_state.place_bias[place][-30:]
+    bias = float(np.mean(recent))
+    st.write(f"{place} 補正値： {bias:+.4f}")
+else:
+    st.write("まだデータがありません")
 
-with st.expander("現在の競艇場別補正値を確認"):
-    if place in st.session_state.place_bias and len(st.session_state.place_bias[place]) > 0:
-        recent = st.session_state.place_bias[place][-30:]
-        bias = float(np.mean(recent))
-        st.write(f"**{place}** の平均補正値： `{bias:+.4f}`")
-    else:
-        st.write("まだこの場のデータがありません。")
+# --- (以下に show_rank_card 関数やタブの処理を続ける) ---
 
-# ---------------------------
-# メインタブ
-# ---------------------------
+def show_rank_card(rank, boat, percent, detail=None):
+    # (既存の関数コード...)
+    pass
+
 tab1, tab2, tab3, tab4 = st.tabs(["簡易版", "詳細版", "ドラッグ予想", "補正展示タイム"])
 
 # シンプル評価ロジックを共通で使うため先に初期化
@@ -144,3 +119,4 @@ with tab4:
     st.subheader("補正展示タイム学習")
     # ここに学習用フォームを作成
     st.info("実際の着順とタイムを紐づけて学習します（開発中）")
+
