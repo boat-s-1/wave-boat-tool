@@ -12,6 +12,7 @@ boats = [1, 2, 3, 4, 5, 6]
 boat_colors = {1: "#ffffff", 2: "#000000", 3: "#ff0000", 4: "#0000ff", 5: "#ffff00", 6: "#00ff00"}
 mark_score = {"☆": 6, "◎": 5, "〇": 4, "□": 3, "△": 2, "×": 1}
 
+# セッション状態（学習データなど）の保持
 if "place_bias" not in st.session_state:
     st.session_state.place_bias = {}
 
@@ -19,9 +20,11 @@ if "place_bias" not in st.session_state:
 # 関数定義
 # ---------------------------
 def show_rank_card(rank, boat, percent, detail=None):
+    """ランキングをカード形式で表示する関数"""
     medal = ["🥇", "🥈", "🥉"]
     icon = medal[rank-1] if rank <= 3 else f"{rank}位"
     
+    # スコアに応じたデザイン設定
     if percent >= 30:
         bg, shadow, badge, border = "linear-gradient(135deg,#fff1b8,#ffd700)", "0 0 18px rgba(255,215,0,0.8)", "💮 本命", "2px solid #ffb700"
     elif percent >= 20:
@@ -40,7 +43,7 @@ def show_rank_card(rank, boat, percent, detail=None):
     st.markdown(html, unsafe_allow_html=True)
 
 # ---------------------------
-# メイン画面
+# メイン画面ヘッダー
 # ---------------------------
 st.title("🚤 予想ツール Pro")
 c1, c2, c3 = st.columns(3)
@@ -52,16 +55,17 @@ with c2:
 with c3:
     race_no = st.selectbox("レース", list(range(1, 13)))
 
+# タブの作成
 tab1, tab2, tab3, tab4 = st.tabs(["簡易版", "詳細版", "ドラッグ予想", "補正展示タイム"])
 
-# シンプル評価ロジック
+# シンプル評価の結果を他でも使うため初期化
 simple_percent = {b: 0 for b in boats}
 
 # ---------------------------
 # Tab 1: 簡易版
 # ---------------------------
 with tab1:
-    st.subheader("シンプル評価")
+    st.subheader("シンプル評価（直感入力）")
     simple_input = {}
     for b in boats:
         cols = st.columns([1, 2, 2, 2, 2])
@@ -72,6 +76,7 @@ with tab1:
         with cols[4]: expo = st.selectbox("展示", list(mark_score), index=3, key=f"se{b}")
         simple_input[b] = [motor, local, start, expo]
 
+    # スコア計算
     simple_scores = {b: sum(mark_score[v] for v in simple_input[b]) for b in boats}
     total_s = sum(simple_scores.values())
     if total_s > 0:
@@ -86,7 +91,7 @@ with tab1:
 # Tab 2: 詳細版
 # ---------------------------
 with tab2:
-    st.subheader("詳細分析")
+    st.subheader("詳細数値分析")
     detail_data = {}
     for b in boats:
         st.write(f"**{b}号艇**")
@@ -97,12 +102,14 @@ with tab2:
         e = c[3].number_input("展示タイム", 6.0, 8.0, 6.90, 0.01, key=f"de{b}")
         detail_data[b] = {"motor": m, "local": l, "start": s, "expo": e}
 
+    st.markdown("#### 分析ウェイト設定")
     w = st.columns(4)
     wm = w[0].slider("モーター重視", 0, 5, 2)
     wl = w[1].slider("当地重視", 0, 5, 2)
     ws = w[2].slider("ST重視", 0, 5, 2)
     we = w[3].slider("展示重視", 0, 5, 2)
 
+    # 詳細スコア計算
     detail_scores = {b: (detail_data[b]["motor"]*wm + detail_data[b]["local"]*wl + (1/detail_data[b]["start"])*ws + (1/detail_data[b]["expo"])*we) for b in boats}
     total_d = sum(detail_scores.values())
     
@@ -116,7 +123,7 @@ with tab2:
 # Tab 3: ドラッグ予想
 # ---------------------------
 with tab3:
-    st.subheader("SNS用ドラッグ予想")
+    st.subheader("SNS投稿用キャンバス")
     objects = []
     for i, b in enumerate(boats):
         offset = 40 if simple_percent[b] >= 20 else 0
@@ -133,21 +140,23 @@ with tab3:
     )
 
 # ---------------------------
-# Tab 4: 補正展示タイム (修正済み)
+# Tab 4: 補正展示タイム（ここを大幅強化）
 # ---------------------------
 with tab4:
-    st.subheader("補正展示タイム分析")
+    st.subheader("展示タイム補正＆学習システム")
     
+    # 学習対象の競艇場を選択
     learn_place = st.selectbox(
-        "学習対象の競艇場",
+        "学習データの対象",
         ["蒲郡","常滑","浜名湖","住之江","大村","徳山","唐津"],
         key="learn_place_final"
     )
 
+    # 1. 各艇のタイム入力
     correct = {}
-    st.markdown("### 各艇データ入力")
+    st.markdown("### 1. 本番データ入力")
     for b in boats:
-        with st.expander(f"{b}号艇のデータ入力"):
+        with st.expander(f"{b}号艇の展示情報を入力", expanded=True):
             c = st.columns(4)
             ex = c[0].number_input("展示タイム", 6.0, 8.0, 6.90, 0.01, key=f"cex{b}")
             st_t = c[1].number_input("直線タイム", 0.0, 10.0, 5.0, 0.01, key=f"cst{b}")
@@ -155,23 +164,22 @@ with tab4:
             tr = c[3].number_input("回り足", 1, 10, 5, 1, key=f"ctr{b}")
             correct[b] = {"expo": ex, "straight": st_t, "lap": lp, "turn": tr}
 
-    # 補正計算
+    # 2. 補正値の計算
     place_bias_value = 0.0
     if learn_place in st.session_state.place_bias and st.session_state.place_bias[learn_place]:
         place_bias_value = float(np.mean(st.session_state.place_bias[learn_place][-30:]))
 
     corrected_time = {}
     for b in boats:
+        # 独自の補正ロジック
         base = (correct[b]["expo"] + correct[b]["lap"] * 0.10 - correct[b]["straight"] * 0.05 - correct[b]["turn"] * 0.02)
-        if b == 1: base += 0.05
+        if b == 1: base += 0.05 # 1号艇は少し厳しめに評価
         corrected_time[b] = base + place_bias_value
 
-    st.info(f"現在の {learn_place} 補正値： `{place_bias_value:+.4f}`")
+    st.info(f"💡 現在の {learn_place} 場別補正： `{place_bias_value:+.4f}`")
 
-    # -----------------------
-    # 比較用データフレームとスタイリング
-    # -----------------------
-    st.markdown("### 📊 タイム比較・分析表")
+    # 3. タイム比較表（1位：赤、2位：黄）
+    st.markdown("### 2. タイム比較・分析表")
     df_data = []
     for b in boats:
         df_data.append({
@@ -185,43 +193,49 @@ with tab4:
     df = pd.DataFrame(df_data)
 
     def highlight_ranks(column):
+        """1位を赤、2位を黄色にする関数"""
         if column.name in ["展示", "1周", "補正タイム"]:
-            # 数値が低い（早い）方が優秀
+            # 展示・1周などは数値が低い（速い）方が1位
             is_1st = column == column.min()
             is_2nd = (column == column.nsmallest(2).iloc[-1]) if len(column.unique()) > 1 else [False]*6
         else:
-            # 数値が高い（パワーがある）方が優秀
+            # 直線・回り足などは数値が高い（パワーがある）方が1位
             is_1st = column == column.max()
             is_2nd = (column == column.nlargest(2).iloc[-1]) if len(column.unique()) > 1 else [False]*6
             
         styles = []
         for v1, v2 in zip(is_1st, is_2nd):
             if v1:
-                styles.append('background-color: #ffcccc; color: #cc0000; font-weight: bold;') # 1位: 赤
+                styles.append('background-color: #ffcccc; color: #cc0000; font-weight: bold;') # 赤
             elif v2:
-                styles.append('background-color: #fff9c4; color: #827717; font-weight: bold;') # 2位: 黄
+                styles.append('background-color: #fff9c4; color: #827717; font-weight: bold;') # 黄
             else:
                 styles.append('')
         return styles
 
+    # テーブル描画
     st.dataframe(
         df.style.apply(highlight_ranks, subset=["展示", "直線", "1周", "回り足", "補正タイム"]),
         use_container_width=True, hide_index=True
     )
-    st.caption("💡 赤：1位、黄：2位（タイムは低値を、評価値は高値を評価）")
+    st.caption("※ 赤：1位評価、黄：2位評価")
 
+    # 4. 着順学習
     st.markdown("---")
-    st.markdown("### 実際の着順を入力")
+    st.markdown("### 3. レース結果の学習")
+    st.write("実際の着順を入力して補正値を更新します。")
     result_order = {}
     cols = st.columns(6)
     for i, b in enumerate(boats):
-        result_order[b] = cols[i].number_input(f"{b}着は？", 1, 6, b, key=f"act_{b}")
+        result_order[b] = cols[i].number_input(f"{b}着は？", 1, 6, b, key=f"act_order_{b}")
 
-    if st.button("この結果を学習に追加"):
+    if st.button("このレース結果を学習データに追加"):
         avg_val = np.mean(list(corrected_time.values()))
         if learn_place not in st.session_state.place_bias:
             st.session_state.place_bias[learn_place] = []
+        
+        # 平均との差分を学習データに蓄積
         for b in boats:
             diff = corrected_time[b] - avg_val
             st.session_state.place_bias[learn_place].append(diff)
-        st.success(f"{learn_place} の学習データを更新しました！")
+        st.success(f"{learn_place} の学習データを保存しました。次回計算に反映されます。")
