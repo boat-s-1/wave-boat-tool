@@ -234,6 +234,3 @@ with tab4:
 
     else:
         st.write("まだデータがありません")
-
-
-
