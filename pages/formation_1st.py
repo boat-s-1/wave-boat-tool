@@ -10,7 +10,7 @@ st.set_page_config(layout="wide")
 IMAGE_PATH = "mark_sheet_base.png"
 OUT_PATH = "ticket.png"
 
-# ① あなたが取得した座標
+# ① 1着1〜6 の座標
 areas_1st = {
     "1st_1": {"x": 234, "y": 355, "r": 9},
     "1st_2": {"x": 270, "y": 355, "r": 9},
@@ -29,7 +29,6 @@ with open(IMAGE_PATH, "rb") as f:
 areas_json = json.dumps(areas_1st)
 selected_json = json.dumps(st.session_state.selected_1st)
 
-# ② 画像＋透明クリックエリア
 html = f"""
 <!DOCTYPE html>
 <html>
@@ -84,13 +83,6 @@ img.onload = () => {{
         selected.add(key);
         d.classList.add("selected");
       }}
-
-      const value = Array.from(selected);
-      window.parent.postMessage({{
-        isStreamlitMessage: true,
-        type: "streamlit:setComponentValue",
-        value: value
-      }}, "*");
     }};
 
     container.appendChild(d);
@@ -101,27 +93,23 @@ img.onload = () => {{
 </html>
 """
 
-clicked = components.html(html, height=700)
+# ★ exec構成対策：戻り値を受け取らない
+components.html(html, height=650)
 
-# ③ クリック結果を受け取る
-if clicked is not None:
-    st.session_state.selected_1st = clicked
+st.write("※ いまは表示確認用（1着のみ）です")
 
-st.write("選択中（1着）：", st.session_state.selected_1st)
-
-# ④ 舟券画像を生成
-if st.button("舟券画像を作成"):
+# 舟券画像生成（仮：全部塗る動作テスト用）
+if st.button("舟券画像を作成（テスト）"):
     img = Image.open(IMAGE_PATH).convert("RGB")
     draw = ImageDraw.Draw(img)
 
-    for k in st.session_state.selected_1st:
-        a = areas_1st[k]
+    # 仮で全マークを塗る
+    for a in areas_1st.values():
         x, y, r = a["x"], a["y"], a["r"]
         draw.ellipse((x-r, y-r, x+r, y+r), fill="black")
 
     img.save(OUT_PATH)
-
-    st.success("生成しました")
+    st.success("テスト画像を生成しました")
 
 if os.path.exists(OUT_PATH):
     st.image(OUT_PATH)
