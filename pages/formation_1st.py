@@ -1,102 +1,84 @@
 import streamlit as st
-import base64
-from pathlib import Path
 import streamlit.components.v1 as components
-
+from PIL import Image, ImageDraw
+import base64
+import json
+import os
+from pathlib import Path
 
 st.set_page_config(layout="wide")
 
-# -----------------------
-# 画像を読み込み（自分の画像パスに変更）
-# -----------------------
-image_path = "mark_sheet_base.png"   # ←あなたの舟券画像
+BASE_DIR = Path(__file__).parent.parent
+IMAGE_PATH = BASE_DIR / "mark_sheet_base.png"
+OUT_PATH = BASE_DIR / "ticket.png"
 
-img_bytes = Path(image_path).read_bytes()
-img_base64 = base64.b64encode(img_bytes).decode()
-
-
-# -----------------------
-# あなたが送ってくれた座標
-# -----------------------
-areas = {
-    "1st_1": {"x": 234, "y": 355, "r": 12},
-    "1st_2": {"x": 270, "y": 355, "r": 12},
-    "1st_3": {"x": 308, "y": 355, "r": 12},
-    "1st_4": {"x": 234, "y": 410, "r": 12},
-    "1st_5": {"x": 270, "y": 410, "r": 12},
-    "1st_6": {"x": 308, "y": 410, "r": 12},
+areas_1st = {
+    "1st_1": {"x": 234, "y": 355, "r": 9},
+    "1st_2": {"x": 270, "y": 355, "r": 9},
+    "1st_3": {"x": 308, "y": 355, "r": 9},
+    "1st_4": {"x": 234, "y": 410, "r": 9},
+    "1st_5": {"x": 270, "y": 410, "r": 9},
+    "1st_6": {"x": 308, "y": 410, "r": 9},
 }
 
+if "selected_1st" not in st.session_state:
+    st.session_state.selected_1st = []
+
+with open(IMAGE_PATH, "rb") as f:
+    b64 = base64.b64encode(f.read()).decode()
+
+areas_json = json.dumps(areas_1st)
+selected_json = json.dumps(st.session_state.selected_1st)
 
 html = f"""
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="utf-8">
 <style>
-body {{
-  margin: 0;
-  padding: 0;
-}}
-
 #container {{
   position: relative;
   display: inline-block;
 }}
 
-#img {{
-  display: block;
-  max-width: none;   /* ★ 勝手に縮まない */
-}}
-
 .area {{
   position: absolute;
-  border: 2px solid rgba(0,0,255,0.5);
   border-radius: 50%;
   cursor: pointer;
   box-sizing: border-box;
+  background: transparent;
 }}
 
 .area.selected {{
-  background: rgba(255,0,0,0.35);
-  border-color: red;
+  background: red;
+  opacity: 0.8;
 }}
 </style>
 </head>
 <body>
 
 <div id="container">
-  <img id="img" src="data:image/png;base64,{img_base64}">
+  <img id="img" src="data:image/png;base64,{b64}">
 </div>
 
 <script>
-const areas = {areas};
-const selected = new Set();
+const areas = {areas_json};
+let selected = new Set({selected_json});
 
 const container = document.getElementById("container");
 const img = document.getElementById("img");
 
-
 img.onload = () => {{
-
-  // -----------------------
-  // ★ 超重要：元画像サイズで固定
-  // -----------------------
-  img.style.width  = img.naturalWidth  + "px";
-  img.style.height = img.naturalHeight + "px";
-
-  container.style.width  = img.naturalWidth  + "px";
-  container.style.height = img.naturalHeight + "px";
-
   for (const [key, a] of Object.entries(areas)) {{
-
     const d = document.createElement("div");
     d.className = "area";
-
-    d.style.left   = (a.x - a.r) + "px";
-    d.style.top    = (a.y - a.r) + "px";
+    d.style.left = (a.x - a.r) + "px";
+    d.style.top  = (a.y - a.r) + "px";
     d.style.width  = (a.r * 2) + "px";
     d.style.height = (a.r * 2) + "px";
+
+    if (selected.has(key)) {{
+      d.classList.add("selected");
+    }}
 
     d.onclick = () => {{
       if (selected.has(key)) {{
@@ -107,33 +89,41 @@ img.onload = () => {{
         d.classList.add("selected");
       }}
 
+      const value = Array.from(selected);
       window.parent.postMessage({{
-        type: "selected",
-        value: Array.from(selected)
+        isStreamlitMessage: true,
+        type: "streamlit:setComponentValue",
+        value: value
       }}, "*");
     }};
 
     container.appendChild(d);
   }}
-
-  // -----------------------
-  // ★ iframe の高さを画像に合わせる
-  // -----------------------
-  window.parent.postMessage({{
-    type: "streamlit:setFrameHeight",
-    height: img.naturalHeight + 20
-  }}, "*");
-
-}};
+}}
 </script>
-
 </body>
 </html>
 """
 
+clicked = components.html(html, height=330)
 
-components.html(
-    html,
-    height=1000,
-    scrolling=True
-)
+if clicked is not None:
+    st.session_state.selected_1st = clicked
+
+st.write("選択中（1着）：", st.session_state.selected_1st)
+
+# ← このボタンは必ずここに出ます
+if st.button("舟券画像を作成"):
+    img = Image.open(IMAGE_PATH).convert("RGB")
+    draw = ImageDraw.Draw(img)
+
+    for k in st.session_state.selected_1st:
+        a = areas_1st[k]
+        x, y, r = a["x"], a["y"], a["r"]
+        draw.ellipse((x-r, y-r, x+r, y+r), fill="red")
+
+    img.save(OUT_PATH)
+    st.success("生成しました")
+
+if os.path.exists(OUT_PATH):
+    st.image(str(OUT_PATH))
