@@ -52,7 +52,7 @@ html = f"""
 <body>
 
 <div id="container">
-  <img id="img" src="data:image/png;base64,{b64}">
+  <img id="img" src="data:image/png;base64,...." style="max-width:none; display:block;">
 </div>
 
 <script>
@@ -62,8 +62,12 @@ let selected = new Set({selected_json});
 const container = document.getElementById("container");
 const img = document.getElementById("img");
 
-img.onload = () => {{
-  for (const [key, a] of Object.entries(areas)) {{
+img.onload = () => {
+
+  // ★ 元画像サイズで固定
+  img.style.width = img.naturalWidth + "px";
+
+  for (const [key, a] of Object.entries(areas)) {
     const d = document.createElement("div");
     d.className = "area";
     d.style.left = (a.x - a.r) + "px";
@@ -71,22 +75,28 @@ img.onload = () => {{
     d.style.width  = (a.r * 2) + "px";
     d.style.height = (a.r * 2) + "px";
 
-    if (selected.has(key)) {{
+    if (selected.has(key)) {
         d.classList.add("selected");
-    }}
+    }
 
-    d.onclick = () => {{
-      if (selected.has(key)) {{
+    d.onclick = () => {
+      if (selected.has(key)) {
         selected.delete(key);
         d.classList.remove("selected");
-      }} else {{
+      } else {
         selected.add(key);
         d.classList.add("selected");
-      }}
-    }};
+      }
+    };
 
     container.appendChild(d);
-  }}
+  }
+
+  window.parent.postMessage({
+    type: "streamlit:setFrameHeight",
+    height: img.naturalHeight + 20
+  }, "*");
+}
 
   // ★ iframe高さを画像に合わせる
   window.parent.postMessage({{
