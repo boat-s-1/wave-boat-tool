@@ -87,6 +87,12 @@ img.onload = () => {{
 
     container.appendChild(d);
   }}
+
+  // ★ iframe高さを画像に合わせる
+  window.parent.postMessage({{
+    type: "streamlit:setFrameHeight",
+    height: img.naturalHeight + 20
+  }}, "*");
 }}
 </script>
 </body>
@@ -94,7 +100,7 @@ img.onload = () => {{
 """
 
 # ★ exec構成対策：戻り値を受け取らない
-components.html(html, height=650)
+components.html(html, height=300)
 
 st.write("※ いまは表示確認用（1着のみ）です")
 
