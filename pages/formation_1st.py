@@ -9,7 +9,7 @@ st.set_page_config(layout="wide")
 # -----------------------
 # 画像を読み込み（自分の画像パスに変更）
 # -----------------------
-image_path = "sample.png"   # ←あなたの舟券画像
+image_path = "mark_sheet_base.png"   # ←あなたの舟券画像
 
 img_bytes = Path(image_path).read_bytes()
 img_base64 = base64.b64encode(img_bytes).decode()
