@@ -4,13 +4,11 @@ from PIL import Image, ImageDraw
 import base64
 import json
 import os
-from pathlib import Path
 
 st.set_page_config(layout="wide")
 
-BASE_DIR = Path(__file__).parent.parent
-IMAGE_PATH = BASE_DIR / "mark_sheet_base.png"
-OUT_PATH = BASE_DIR / "ticket.png"
+IMAGE_PATH = "mark_sheet_base.png"
+OUT_PATH = "ticket.png"
 
 areas_1st = {
     "1st_1": {"x": 234, "y": 355, "r": 9},
@@ -44,13 +42,12 @@ html = f"""
   position: absolute;
   border-radius: 50%;
   cursor: pointer;
-  box-sizing: border-box;
   background: transparent;
+  border: 2px solid transparent;
 }}
 
 .area.selected {{
-  background: red;
-  opacity: 0.8;
+  border: 3px solid red;
 }}
 </style>
 </head>
@@ -89,11 +86,10 @@ img.onload = () => {{
         d.classList.add("selected");
       }}
 
-      const value = Array.from(selected);
       window.parent.postMessage({{
         isStreamlitMessage: true,
         type: "streamlit:setComponentValue",
-        value: value
+        value: Array.from(selected)
       }}, "*");
     }};
 
@@ -101,18 +97,19 @@ img.onload = () => {{
   }}
 }}
 </script>
+
 </body>
 </html>
 """
 
-clicked = components.html(html, height=330)
+clicked = components.html(html, height=800)
 
 if clicked is not None:
     st.session_state.selected_1st = clicked
 
 st.write("選択中（1着）：", st.session_state.selected_1st)
 
-# ← このボタンは必ずここに出ます
+# ここが消えないボタン
 if st.button("舟券画像を作成"):
     img = Image.open(IMAGE_PATH).convert("RGB")
     draw = ImageDraw.Draw(img)
@@ -120,10 +117,10 @@ if st.button("舟券画像を作成"):
     for k in st.session_state.selected_1st:
         a = areas_1st[k]
         x, y, r = a["x"], a["y"], a["r"]
-        draw.ellipse((x-r, y-r, x+r, y+r), fill="red")
+        draw.ellipse((x-r, y-r, x+r, y+r), fill="black")
 
     img.save(OUT_PATH)
     st.success("生成しました")
 
 if os.path.exists(OUT_PATH):
-    st.image(str(OUT_PATH))
+    st.image(OUT_PATH)
