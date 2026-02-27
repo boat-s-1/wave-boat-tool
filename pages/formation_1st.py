@@ -1,130 +1,139 @@
 import streamlit as st
-import streamlit.components.v1 as components
-from PIL import Image, ImageDraw
 import base64
-import json
-import os
+from pathlib import Path
+import streamlit.components.v1 as components
+
 
 st.set_page_config(layout="wide")
 
-IMAGE_PATH = "mark_sheet_base.png"
-OUT_PATH = "ticket.png"
+# -----------------------
+# 画像を読み込み（自分の画像パスに変更）
+# -----------------------
+image_path = "sample.png"   # ←あなたの舟券画像
 
-# ① 1着1〜6 の座標
-areas_1st = {
-    "1st_1": {"x": 234, "y": 355, "r": 9},
-    "1st_2": {"x": 270, "y": 355, "r": 9},
-    "1st_3": {"x": 308, "y": 355, "r": 9},
-    "1st_4": {"x": 234, "y": 410, "r": 9},
-    "1st_5": {"x": 270, "y": 410, "r": 9},
-    "1st_6": {"x": 308, "y": 410, "r": 9},
+img_bytes = Path(image_path).read_bytes()
+img_base64 = base64.b64encode(img_bytes).decode()
+
+
+# -----------------------
+# あなたが送ってくれた座標
+# -----------------------
+areas = {
+    "1st_1": {"x": 234, "y": 355, "r": 12},
+    "1st_2": {"x": 270, "y": 355, "r": 12},
+    "1st_3": {"x": 308, "y": 355, "r": 12},
+    "1st_4": {"x": 234, "y": 410, "r": 12},
+    "1st_5": {"x": 270, "y": 410, "r": 12},
+    "1st_6": {"x": 308, "y": 410, "r": 12},
 }
 
-if "selected_1st" not in st.session_state:
-    st.session_state.selected_1st = []
-
-with open(IMAGE_PATH, "rb") as f:
-    b64 = base64.b64encode(f.read()).decode()
-
-areas_json = json.dumps(areas_1st)
-selected_json = json.dumps(st.session_state.selected_1st)
 
 html = f"""
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="utf-8">
 <style>
+body {{
+  margin: 0;
+  padding: 0;
+}}
+
 #container {{
   position: relative;
   display: inline-block;
 }}
+
+#img {{
+  display: block;
+  max-width: none;   /* ★ 勝手に縮まない */
+}}
+
 .area {{
   position: absolute;
+  border: 2px solid rgba(0,0,255,0.5);
   border-radius: 50%;
   cursor: pointer;
   box-sizing: border-box;
 }}
+
 .area.selected {{
-  outline: 3px solid red;
+  background: rgba(255,0,0,0.35);
+  border-color: red;
 }}
 </style>
 </head>
 <body>
 
 <div id="container">
-  <img id="img" src="data:image/png;base64,...." style="max-width:none; display:block;">
+  <img id="img" src="data:image/png;base64,{img_base64}">
 </div>
 
 <script>
-const areas = {areas_json};
-let selected = new Set({selected_json});
+const areas = {areas};
+const selected = new Set();
 
 const container = document.getElementById("container");
 const img = document.getElementById("img");
 
-img.onload = () => {
 
-  // ★ 元画像サイズで固定
-  img.style.width = img.naturalWidth + "px";
+img.onload = () => {{
 
-  for (const [key, a] of Object.entries(areas)) {
+  // -----------------------
+  // ★ 超重要：元画像サイズで固定
+  // -----------------------
+  img.style.width  = img.naturalWidth  + "px";
+  img.style.height = img.naturalHeight + "px";
+
+  container.style.width  = img.naturalWidth  + "px";
+  container.style.height = img.naturalHeight + "px";
+
+  for (const [key, a] of Object.entries(areas)) {{
+
     const d = document.createElement("div");
     d.className = "area";
-    d.style.left = (a.x - a.r) + "px";
-    d.style.top  = (a.y - a.r) + "px";
+
+    d.style.left   = (a.x - a.r) + "px";
+    d.style.top    = (a.y - a.r) + "px";
     d.style.width  = (a.r * 2) + "px";
     d.style.height = (a.r * 2) + "px";
 
-    if (selected.has(key)) {
-        d.classList.add("selected");
-    }
-
-    d.onclick = () => {
-      if (selected.has(key)) {
+    d.onclick = () => {{
+      if (selected.has(key)) {{
         selected.delete(key);
         d.classList.remove("selected");
-      } else {
+      }} else {{
         selected.add(key);
         d.classList.add("selected");
-      }
-    };
+      }}
+
+      window.parent.postMessage({{
+        type: "selected",
+        value: Array.from(selected)
+      }}, "*");
+    }};
 
     container.appendChild(d);
-  }
+  }}
 
-  window.parent.postMessage({
-    type: "streamlit:setFrameHeight",
-    height: img.naturalHeight + 20
-  }, "*");
-}
-
-  // ★ iframe高さを画像に合わせる
+  // -----------------------
+  // ★ iframe の高さを画像に合わせる
+  // -----------------------
   window.parent.postMessage({{
     type: "streamlit:setFrameHeight",
     height: img.naturalHeight + 20
   }}, "*");
-}}
+
+}};
 </script>
+
 </body>
 </html>
 """
 
-# ★ exec構成対策：戻り値を受け取らない
-components.html(html, height=300)
 
-st.write("※ いまは表示確認用（1着のみ）です")
-
-# 舟券画像生成（仮：全部塗る動作テスト用）
-if st.button("舟券画像を作成（テスト）"):
-    img = Image.open(IMAGE_PATH).convert("RGB")
-    draw = ImageDraw.Draw(img)
-
-    # 仮で全マークを塗る
-    for a in areas_1st.values():
-        x, y, r = a["x"], a["y"], a["r"]
-        draw.ellipse((x-r, y-r, x+r, y+r), fill="black")
-
-    img.save(OUT_PATH)
-    st.success("テスト画像を生成しました")
-if os.path.exists(OUT_PATH):
-    st.image(OUT_PATH)
+components.html(
+    html,
+    height=1000,
+    scrolling=True
+)
