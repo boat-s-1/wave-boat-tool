@@ -12,10 +12,9 @@ OUT_PATH = "ticket.png"
 
 
 # ----------------------
-# ① 座標
+# 座標
 # ----------------------
 
-# 1着（あなたのもの）
 areas_1st = {
     "1st_1": {"x": 234, "y": 355, "r": 9},
     "1st_2": {"x": 270, "y": 355, "r": 9},
@@ -25,7 +24,6 @@ areas_1st = {
     "1st_6": {"x": 308, "y": 410, "r": 9},
 }
 
-# 2着（今回もらったXを反映）
 areas_2nd = {
     "2nd_1": {"x": 338, "y": 355, "r": 9},
     "2nd_2": {"x": 375, "y": 355, "r": 9},
@@ -35,7 +33,6 @@ areas_2nd = {
     "2nd_6": {"x": 410, "y": 410, "r": 9},
 }
 
-# 3着（今回もらったXを反映）
 areas_3rd = {
     "3rd_1": {"x": 444, "y": 355, "r": 9},
     "3rd_2": {"x": 480, "y": 355, "r": 9},
@@ -47,16 +44,16 @@ areas_3rd = {
 
 
 # ----------------------
-# ② セッション
+# セッション初期化（超重要）
 # ----------------------
 
 for k in ["selected_1st", "selected_2nd", "selected_3rd"]:
-    if k not in st.session_state:
+    if k not in st.session_state or not isinstance(st.session_state.get(k), list):
         st.session_state[k] = []
 
 
 # ----------------------
-# ③ 画像 base64
+# 画像 base64
 # ----------------------
 
 with open(IMAGE_PATH, "rb") as f:
@@ -64,10 +61,14 @@ with open(IMAGE_PATH, "rb") as f:
 
 
 # ----------------------
-# ④ マークUI
+# マークUI
 # ----------------------
 
 def mark_ui(title, areas, state_key, height=800):
+
+    # DeltaGenerator混入対策
+    if not isinstance(st.session_state.get(state_key), list):
+        st.session_state[state_key] = []
 
     areas_json = json.dumps(areas)
     selected_json = json.dumps(st.session_state[state_key])
@@ -149,14 +150,14 @@ def mark_ui(title, areas, state_key, height=800):
     st.subheader(title)
     clicked = components.html(html, height=height)
 
-    if clicked is not None:
+    if isinstance(clicked, list):
         st.session_state[state_key] = clicked
 
     st.write("選択中：", st.session_state[state_key])
 
 
 # ----------------------
-# ⑤ 画面
+# 画面
 # ----------------------
 
 tab1, tab2, tab3 = st.tabs(["1着", "2着", "3着"])
@@ -172,7 +173,7 @@ with tab3:
 
 
 # ----------------------
-# ⑥ 舟券画像生成
+# 舟券画像生成
 # ----------------------
 
 if st.button("舟券画像を作成"):
