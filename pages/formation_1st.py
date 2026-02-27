@@ -126,6 +126,5 @@ if st.button("舟券画像を作成（テスト）"):
 
     img.save(OUT_PATH)
     st.success("テスト画像を生成しました")
-
 if os.path.exists(OUT_PATH):
     st.image(OUT_PATH)
